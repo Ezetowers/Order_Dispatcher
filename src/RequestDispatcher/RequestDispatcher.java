@@ -11,6 +11,9 @@ import com.rabbitmq.client.AMQP;
 import java.util.concurrent.TimeoutException;
 import java.io.IOException;
 
+import common.Order;
+import org.apache.commons.lang3.SerializationUtils;
+
 public class RequestDispatcher {
     private static final String QUEUE_NAME = "FIRST_QUEUE";
 
@@ -31,8 +34,8 @@ public class RequestDispatcher {
                                        AMQP.BasicProperties properties, 
                                        byte[] body) throws IOException {
 
-                String message = new String(body, "UTF-8");
-                System.out.println(" [x] Received '" + message + "'");
+                Order newOrder = (Order) SerializationUtils.deserialize(body);
+                System.out.println("Order: " + newOrder.toString());
             }
         };
 

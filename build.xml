@@ -99,6 +99,25 @@
         </java>
     </target>
 
+    <target name="request-dispatcher-run" depends="jar">
+        <java fork="true" classname="${request-dispatcher-class}">
+            <classpath>
+                <path refid="classpath"/>
+                <path location="${jar.dir}/${request-dispatcher-process-name}.jar"/>
+            </classpath>
+        </java>
+    </target>
+
+    <target name="request-dispatcher-run-debug" depends="jar-debug">
+        <java fork="true" classname="${request-dispatcher-class}">
+            <classpath>
+                <path refid="classpath"/>
+                <path location="${jar.dir}/${request-dispatcher-process-name}.jar"/>
+            </classpath>
+            <jvmarg line="-Xdebug -agentlib:jdwp=transport=dt_socket,server=y,suspend=n"/>
+        </java>
+    </target>
+
     <target name="run-all" depends="jar">
         <java fork="true" classname="${client-class}">
             <classpath>
