@@ -18,7 +18,7 @@ public enum Product {
     private static final Random RANDOM = new Random();
 
     public static Product randomProduct() {
-    return VALUES.get(RANDOM.nextInt(SIZE));
+        return VALUES.get(RANDOM.nextInt(SIZE));
     }
 
 }

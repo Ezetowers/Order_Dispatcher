@@ -4,7 +4,7 @@ package requestDispatcher;
 import configParser.ConfigParser;
 import logger.Logger;
 import logger.LogLevel;
-import requestDispatcher.OrderConsumer;
+import requestDispatcher.RequestDispatcher;
 
 // External libraries includes
 import com.rabbitmq.client.ConnectionFactory;
@@ -46,7 +46,7 @@ public class MainClass {
                                  false, 
                                  null);
 
-            Consumer consumer = new OrderConsumer(channel);
+            Consumer consumer = new RequestDispatcher(channel);
             channel.basicConsume(clientQueue, true, consumer);
         }
         catch (IllegalArgumentException e) {

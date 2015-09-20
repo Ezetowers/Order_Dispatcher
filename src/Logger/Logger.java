@@ -91,15 +91,12 @@ public class Logger {
             System.err.println(e);
             System.exit(-1);
         }
-        finally {
-        }
     }
 
     private static Logger logger_ = null;
     private DateFormat dateFormat_;
     private LogLevel verbosity_;
     private FileOutputStream fstream_;
-    // private FileChannel channel_;
     private Lock lock_;
     private String prefix_;
 }

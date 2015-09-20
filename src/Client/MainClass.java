@@ -1,5 +1,7 @@
 package client;
 
+import java.lang.System;
+import java.util.Random;
 import java.util.concurrent.TimeoutException;
 import java.io.IOException;
 import java.util.Random;
@@ -16,6 +18,10 @@ import logger.Logger;
 import logger.LogLevel;
 
 public class MainClass {
+    public MainClass() {
+        randomGenerator_ = new Random(System.currentTimeMillis());
+    }
+    
     public static void main(String[] argv) {
         ConfigParser config = ConfigParser.getInstance();                                        
         Logger logger = Logger.getInstance();
@@ -73,6 +79,9 @@ public class MainClass {
     }
 
     public Order generateRandomOrder() {
-        return new Order(Product.randomProduct(), 10);
+        Long amount = new Long(randomGenerator_.nextLong() % 10 + 1);
+        return new Order(Product.randomProduct(), amount);
     }
+
+    private Random randomGenerator_; 
 }
