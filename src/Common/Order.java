@@ -1,10 +1,13 @@
 package common;
 
+import common.Product;
+
 import java.io.Serializable;
 import java.util.UUID;
 
 public class Order implements Serializable {
-    public Order(int productType, long amount) {
+    public Order(Product productType, long amount) {
+        clientName_ = "JON SKEET";
         productType_ = productType;
         amount_ = amount;
     }
@@ -13,7 +16,11 @@ public class Order implements Serializable {
         return uuid_;
     }
 
-    public int productType() {
+    public String stringID() {
+        return uuid_.toString();
+    }
+
+    public Product productType() {
         return productType_;
     }
 
@@ -23,14 +30,17 @@ public class Order implements Serializable {
 
     public String toString() {
         String aux = "";
-        aux += uuid_.toString() + " - ";
-        aux += productType_ + " - " + amount_;
+        aux += "Client Name: " + clientName_ + " - ";
+        aux += "Order ID: " + uuid_.toString() + " - ";
+        aux += "Product Type: " + productType_.toString() + " - ";
+        aux += "Amount: " + amount_;
         return aux;
     }
 
+    private String clientName_;
     private final UUID uuid_ = UUID.randomUUID();
     // FIXME: Create a enum or something like that to represent this
-    private int productType_;
+    private Product productType_;
     private long amount_;
     public static final long serialVersionUID = 123L;
 }

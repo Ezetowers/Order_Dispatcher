@@ -8,11 +8,13 @@
 
     <!-- Particular Properties for every Program -->
     <property name="client-process-name" value="Client"/>
-    <property name="client-class"      value="client.Client"/>
+    <property name="client-class"      value="client.MainClass"/>
     <property name="request-dispatcher-process-name" 
               value="RequestDispatcher"/>
     <property name="request-dispatcher-class"      
-              value="requestDispatcher.RequestDispatcher"/>
+              value="requestDispatcher.MainClass"/>
+    <property name="audit-process-name" value="AuditLogger"/>
+    <property name="audit-class"      value="auditLogger.MainClass"/>
 
     <path id="classpath">
         <fileset dir="${lib.dir}" includes="**/*.jar"/>
@@ -43,13 +45,20 @@
             <compilerarg line="-g -Xlint:all -Xdiags:verbose"/>
         </javac>
     </target>
-
+    
     <target name="jar" depends="compile">
         <mkdir dir="${jar.dir}"/>
         <jar destfile="${jar.dir}/${client-process-name}.jar" 
              basedir="${classes.dir}">
             <manifest>
                 <attribute name="client-class" value="${client-class}"/>
+            </manifest>
+        </jar>
+
+        <jar destfile="${jar.dir}/${audit-process-name}.jar" 
+             basedir="${classes.dir}">
+            <manifest>
+                <attribute name="audit-class" value="${audit-class}"/>
             </manifest>
         </jar>
 
@@ -71,6 +80,13 @@
             </manifest>
         </jar>
 
+        <jar destfile="${jar.dir}/${audit-process-name}.jar" 
+             basedir="${classes.dir}">
+            <manifest>
+                <attribute name="audit-class" value="${audit-class}"/>
+            </manifest>
+        </jar>
+
         <jar destfile="${jar.dir}/${request-dispatcher-process-name}.jar" 
              basedir="${classes.dir}">
             <manifest>
@@ -80,61 +96,7 @@
         </jar>
     </target>
 
-    <target name="client-run" depends="jar">
-        <java fork="true" classname="${client-class}">
-            <classpath>
-                <path refid="classpath"/>
-                <path location="${jar.dir}/${client-process-name}.jar"/>
-            </classpath>
-        </java>
-    </target>
-
-    <target name="client-run-debug" depends="jar-debug">
-        <java fork="true" classname="${{client-class}">
-            <classpath>
-                <path refid="classpath"/>
-                <path location="${jar.dir}/${client-process-name}.jar"/>
-            </classpath>
-            <jvmarg line="-Xdebug -agentlib:jdwp=transport=dt_socket,server=y,suspend=n"/>
-        </java>
-    </target>
-
-    <target name="request-dispatcher-run" depends="jar">
-        <java fork="true" classname="${request-dispatcher-class}">
-            <classpath>
-                <path refid="classpath"/>
-                <path location="${jar.dir}/${request-dispatcher-process-name}.jar"/>
-            </classpath>
-        </java>
-    </target>
-
-    <target name="request-dispatcher-run-debug" depends="jar-debug">
-        <java fork="true" classname="${request-dispatcher-class}">
-            <classpath>
-                <path refid="classpath"/>
-                <path location="${jar.dir}/${request-dispatcher-process-name}.jar"/>
-            </classpath>
-            <jvmarg line="-Xdebug -agentlib:jdwp=transport=dt_socket,server=y,suspend=n"/>
-        </java>
-    </target>
-
-    <target name="run-all" depends="jar">
-        <java fork="true" classname="${client-class}">
-            <classpath>
-                <path refid="classpath"/>
-                <path location="${jar.dir}/${client-process-name}.jar"/>
-            </classpath>
-        </java>
-
-        <java fork="true" classname="${request-dispatcher-class}">
-            <classpath>
-                <path refid="classpath"/>
-                <path location="${jar.dir}/${request-dispatcher-process-name}.jar"/>
-            </classpath>
-        </java>
-    </target>
-
     <target name="clean-build" depends="clean,jar"/>
-    <target name="main" depends="clean, run-all"/>
+    <target name="main" depends="clean, compile"/>
 
 </project>
