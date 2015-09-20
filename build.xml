@@ -17,6 +17,8 @@
     <property name="audit-class"      value="auditLogger.MainClass"/>
     <property name="stock-manager-process-name" value="StockManager"/>
     <property name="stock-class"      value="stockManager.MainClass"/>
+    <property name="order-manager-process-name" value="OrderManager"/>
+    <property name="order-class"      value="orderManager.MainClass"/>
 
     <path id="classpath">
         <fileset dir="${lib.dir}" includes="**/*.jar"/>
@@ -72,6 +74,14 @@
             </manifest>
         </jar>
 
+        <jar destfile="${jar.dir}/${order-manager-process-name}.jar" 
+             basedir="${classes.dir}">
+            <manifest>
+                <attribute name="order-manager-class" 
+                           value="${order-manager-class}"/>
+            </manifest>
+        </jar>
+
         <jar destfile="${jar.dir}/${request-dispatcher-process-name}.jar" 
              basedir="${classes.dir}">
             <manifest>
@@ -102,6 +112,14 @@
             <manifest>
                 <attribute name="stock-manager-class" 
                            value="${stock-manager-class}"/>
+            </manifest>
+        </jar>
+
+        <jar destfile="${jar.dir}/${order-manager-process-name}.jar" 
+             basedir="${classes.dir}">
+            <manifest>
+                <attribute name="order-manager-class" 
+                           value="${order-manager-class}"/>
             </manifest>
         </jar>
 

@@ -1,5 +1,8 @@
 package auditLogger;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.text.DateFormat;
 import java.io.File;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.Connection;
@@ -25,6 +28,7 @@ public class AuditLogger extends DefaultConsumer {
         logger_ = Logger.getInstance();
         // Open log file in append mode
         File file = new File(auditLogFile);
+        dateFormat_ = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 
         if (! file.exists()) {
             logger_.log(LogLevel.WARNING, 
@@ -32,7 +36,6 @@ public class AuditLogger extends DefaultConsumer {
                 + " Proceed to create it. AuditLogFile: " + auditLogFile);
             file.createNewFile();
         }
-
         writer_ = new FileWriter(auditLogFile, true);
     }
 
@@ -43,10 +46,18 @@ public class AuditLogger extends DefaultConsumer {
                                byte[] body) throws IOException {
         Order newOrder = (Order) SerializationUtils.deserialize(body);
         logger_.log(LogLevel.DEBUG, "Order received: " + newOrder.stringID());
-        writer_.write(newOrder.toString() + "\n");
+        writer_.write(this.generateAuditEntry(newOrder) + "\n");
         writer_.flush();
+    }
+
+    private String generateAuditEntry(Order order) {
+        Date date = new Date();
+        String entry = dateFormat_.format(date) + " - ";
+        entry += "Order ID: " + order.stringID();
+        return entry;
     }
 
     private Logger logger_;
     private FileWriter writer_;
+    private DateFormat dateFormat_;
 }

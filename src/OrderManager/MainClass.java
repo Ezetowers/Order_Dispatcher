@@ -1,29 +1,26 @@
-package client;
+package orderManager;
 
-import java.lang.Math;
-import java.lang.System;
-import java.util.Random;
-import java.util.concurrent.TimeoutException;
-import java.io.IOException;
-import java.util.Random;
-
-import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.Channel;
-import org.apache.commons.lang3.SerializationUtils;
-
-import common.Order;
-import common.OrderState;
-import common.Product;
+// Program includes
 import configParser.ConfigParser;
 import logger.Logger;
 import logger.LogLevel;
+import orderManager.OrderManager;
+
+// External libraries includes
+import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Consumer;
+import com.rabbitmq.client.DefaultConsumer;
+import com.rabbitmq.client.Envelope;
+import com.rabbitmq.client.AMQP;
+
+// Java includes
+import java.lang.IllegalArgumentException;
+import java.io.IOException;
+import java.util.concurrent.TimeoutException;
 
 public class MainClass {
-    public MainClass() {
-        randomGenerator_ = new Random(System.currentTimeMillis());
-    }
-
     public static void main(String[] argv) {
         ConfigParser config = ConfigParser.getInstance();                                        
         Logger logger = Logger.getInstance();
@@ -40,30 +37,17 @@ public class MainClass {
             Connection connection = factory.newConnection();
             Channel channel = connection.createChannel();
 
-            String clientQueue = config.get("QUEUES", "client-queue");
-            channel.queueDeclare(clientQueue, 
+            String orderQueue = config.get("QUEUES", "order-manager-queue");
+            // To secure fairness between the processes
+            channel.basicQos(1);
+            channel.queueDeclare(orderQueue, 
                                  false, 
                                  false, 
                                  false, 
                                  null);
 
-            int ordersToCreate = 
-                Integer.parseInt(config.get("CLIENT", 
-                                            "amount-orders-to-simulate",
-                                            "1"));
-            logger.log(LogLevel.DEBUG, "Orders to simulate: " 
-                + ordersToCreate);
-
-            for (int i = 0; i < ordersToCreate; ++i) {
-                Order order = app.generateRandomOrder();
-                byte[] data = SerializationUtils.serialize(order);
-
-                logger.log(LogLevel.DEBUG, "Sending order: " + order.stringID());
-                channel.basicPublish("", clientQueue, null, data);
-            }
-
-            channel.close();
-            connection.close();
+            Consumer consumer = new OrderManager(channel);
+            channel.basicConsume(orderQueue, true, consumer);
         }
         catch (IllegalArgumentException e) {
             // We couldn't open the logger. Just exit
@@ -85,14 +69,7 @@ public class MainClass {
 
         Logger logger = Logger.getInstance();
         logger.init(logFileName, LogLevel.parse(logLevel));
-        logger.setPrefix("[CLIENT " + processNumber + "]");
+        logger.setPrefix("[ORDER_MANAGER " + processNumber + "]");
         logger.log(LogLevel.DEBUG, "Process started");
     }
-
-    public Order generateRandomOrder() {
-        long amount = Math.abs(randomGenerator_.nextInt() % 10) + 1;
-        return new Order(Product.randomProduct(), amount);
-    }
-
-    private Random randomGenerator_; 
 }
