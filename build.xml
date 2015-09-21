@@ -11,6 +11,10 @@
               value=  "Client"/>
     <property name=   "client-class"      
                value= "client.MainClass"/>
+    <property name=   "employer-process-name" 
+              value=  "Employer"/>
+    <property name=   "employer-class"      
+               value= "employer.MainClass"/>
     <property name=   "request-dispatcher-process-name" 
               value=  "RequestDispatcher"/>
     <property name=   "request-dispatcher-class" 
@@ -75,6 +79,13 @@
             </manifest>
         </jar>
 
+        <jar destfile="${jar.dir}/${employer-process-name}.jar" 
+             basedir="${classes.dir}">
+            <manifest>
+                <attribute name="employer-class" value="${employer-class}"/>
+            </manifest>
+        </jar>
+
         <jar destfile="${jar.dir}/${audit-process-name}.jar" 
              basedir="${classes.dir}">
             <manifest>
@@ -129,6 +140,13 @@
              basedir="${classes.dir}">
             <manifest>
                 <attribute name="client-class" value="${client-class}"/>
+            </manifest>
+        </jar>
+
+        <jar destfile="${jar.dir}/${employer-process-name}.jar" 
+             basedir="${classes.dir}">
+            <manifest>
+                <attribute name="employer-class" value="${employer-class}"/>
             </manifest>
         </jar>
 

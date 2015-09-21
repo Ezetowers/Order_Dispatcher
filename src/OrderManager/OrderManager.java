@@ -51,13 +51,22 @@ public class OrderManager extends DefaultConsumer {
                 logger_.log(LogLevel.NOTICE, "OrderDB::add. Time: " 
                     + elapsedTime_ + " ms.");
                 break;
-            case ACCEPTED:
-            case REJECTED:
             case DELIVERED:
+            case REJECTED:
                 orderDB_.alter(newOrder);
                 elapsedTime_ = System.currentTimeMillis() - elapsedTime_;
                 logger_.log(LogLevel.NOTICE, "OrderDB::alter. Time: " 
                     + elapsedTime_ + " ms.");
+                break;
+            case ACCEPTED:
+                orderDB_.alter(newOrder);
+                elapsedTime_ = System.currentTimeMillis() - elapsedTime_;
+                logger_.log(LogLevel.NOTICE, "OrderDB::alter. Time: " 
+                    + elapsedTime_ + " ms.");
+                this.getChannel().basicPublish("", 
+                                               deliveryQueueName_, 
+                                               null, 
+                                               body);
                 break;
         }       
 
@@ -72,23 +81,17 @@ public class OrderManager extends DefaultConsumer {
         Channel channel = this.getChannel();
         channel.basicQos(1);
 
-        /* auditLogQueueName_ = config_.get("QUEUES", "audit-log-queue");
-        channel.queueDeclare(auditLogQueueName_, 
+        deliveryQueueName_ = config_.get("QUEUES", "delivery-queue");
+        channel.queueDeclare(deliveryQueueName_, 
                              false, 
                              false, 
                              false, 
                              null);
-
-        stockManagerQueue_ = config_.get("QUEUES", "stock-manager-queue");
-        channel.queueDeclare(stockManagerQueue_, 
-                             false, 
-                             false, 
-                             false, 
-                             null);*/
     }
 
     private Logger logger_;
     private ConfigParser config_;
     private OrderDB orderDB_;
     private long elapsedTime_;
+    private String deliveryQueueName_;
 }

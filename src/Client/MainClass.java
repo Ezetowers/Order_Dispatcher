@@ -39,7 +39,21 @@ public class MainClass {
         try {
             MainClass app = new MainClass(argv);
             app.initRabbit();
+            logger.log(LogLevel.INFO, 
+                "Proceed to create and send orders");
             app.sendOrders();
+
+            int sleepTime = Integer.parseInt(config.get("CLIENT", 
+                "sleep-between-orders-and-queries", "0"));
+
+            if (sleepTime > 0) {
+                logger.log(LogLevel.INFO, 
+                    "Proceed to sleep before send queries to the system");
+                Thread.sleep(sleepTime * 1000);
+            }
+
+            logger.log(LogLevel.INFO, 
+                "Proceed to send queries associated with the orders created");
             app.queryOrders();
             app.terminate();
         }
@@ -77,17 +91,17 @@ public class MainClass {
 
         clientQueue_ = config_.get("QUEUES", "client-queue");
         channel_.queueDeclare(clientQueue_, 
-                             false, 
-                             false, 
-                             false, 
-                             null);
+                              false, 
+                              false, 
+                              false, 
+                              null);
 
         queryQueue_ = config_.get("QUEUES", "query-queue");
         channel_.queueDeclare(queryQueue_, 
-                             false, 
-                             false, 
-                             false,
-                             null);
+                              false, 
+                              false, 
+                              false,
+                              null);
     }
 
     public void terminate() throws IOException, TimeoutException {
@@ -115,6 +129,12 @@ public class MainClass {
         }
     }
 
+    /**
+     * @brief Sends as much queries as the parameter amount-queries-to-simulate
+     * @details If amount-queries-to-simulate is bigger than 
+     * amount-orders-to-simulate, a round-robin algorithm is used to keep 
+     * querying orders
+     */
     public void queryOrders() throws IOException {
         int amountQueries = 
             Integer.parseInt(config_.get("CLIENT", 

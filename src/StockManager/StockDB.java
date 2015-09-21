@@ -20,7 +20,6 @@ import logger.LogLevel;
 public class StockDB {
     public StockDB(String dbFilePath) throws IOException {
         logger_ = Logger.getInstance();
-        map_ = new HashMap<Product, Long>();
 
         File file = new File(dbFilePath);
         // Taken from the JavaDocs
@@ -54,11 +53,12 @@ public class StockDB {
     }
 
     private void createEmptyStockFile() throws IOException {
+        HashMap<Product, Long> map = new HashMap<Product, Long>();
         for (Product product : Product.values()) {
-            map_.put(product, new Long(10000));
+            map.put(product, new Long(10000));
         }
 
-        for (Map.Entry<Product, Long> entry : map_.entrySet()) {
+        for (Map.Entry<Product, Long> entry : map.entrySet()) {
             String key = String.format("%-10s", entry.getKey().toString());
             file_.write(key.getBytes());
 
