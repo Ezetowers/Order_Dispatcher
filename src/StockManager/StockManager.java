@@ -25,7 +25,7 @@ public class StockManager extends DefaultConsumer {
         super(channel);
         logger_ = Logger.getInstance();
         config_ = ConfigParser.getInstance();
-        // auditLogQueueName_ = config_.get("QUEUES", "audit-log-queue");
+        this.initQueues();
 
         String stockDBFile = config_.get("STOCK", "stock-db-file");
         stockDB_ = new StockDB(stockDBFile);
@@ -37,7 +37,7 @@ public class StockManager extends DefaultConsumer {
                                AMQP.BasicProperties properties, 
                                byte[] body) throws IOException {
         Order newOrder = (Order) SerializationUtils.deserialize(body);
-        logger_.log(LogLevel.DEBUG, "Order received: " + newOrder.toString());
+        logger_.log(LogLevel.TRACE, "Order received: " + newOrder.toString());
 
         boolean enoughStock = stockDB_.decreaseStock(newOrder.productType(), 
                                                      newOrder.amount());
@@ -49,11 +49,30 @@ public class StockManager extends DefaultConsumer {
             newOrder.state(OrderState.REJECTED);    
         }
 
-        logger_.log(LogLevel.DEBUG, "Order processed: " + newOrder.toString());
+        logger_.log(LogLevel.INFO, "Order processed: " 
+            + newOrder.toStringShort() + ". Sending it to the OrderManager.");
+
+        body = SerializationUtils.serialize(newOrder);
+        this.getChannel().basicPublish("", orderManagerQueueName_, null, body);
+    }
+
+    /**
+     * @brief Declare the queues. This is necessary because maybe they have not
+     * been created yet
+     */
+    private void initQueues() throws IOException {
+        Channel channel = this.getChannel();
+
+        orderManagerQueueName_ = config_.get("QUEUES", "order-manager-queue");
+        channel.queueDeclare(orderManagerQueueName_, 
+                             false, 
+                             false, 
+                             false, 
+                             null);
     }
 
     private Logger logger_;
     private ConfigParser config_;
-    private String auditLogQueueName_;
+    private String orderManagerQueueName_;
     private StockDB stockDB_;
 }

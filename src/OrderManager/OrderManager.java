@@ -11,6 +11,7 @@ import org.apache.commons.lang3.SerializationUtils;
 
 import configParser.ConfigParser;
 import common.Order;
+import common.OrderDB;
 import common.OrderState;
 import logger.Logger;
 import logger.LogLevel;
@@ -24,7 +25,10 @@ public class OrderManager extends DefaultConsumer {
         super(channel);
         logger_ = Logger.getInstance();
         config_ = ConfigParser.getInstance();
+
+        orderDB_ = new OrderDB(config_.get("ORDER", "order-db-directory"));
         this.initQueues();
+
     }
 
     @Override
@@ -34,6 +38,21 @@ public class OrderManager extends DefaultConsumer {
                                byte[] body) throws IOException {
         Order newOrder = (Order) SerializationUtils.deserialize(body);
         logger_.log(LogLevel.DEBUG, "Order received: " + newOrder.stringID());
+
+        OrderState state = newOrder.state();
+        switch(newOrder.state()) {
+            case RECEIVED:
+                // Add the order to the DB
+                orderDB_.add(newOrder);
+                break;
+            case ACCEPTED:
+            case REJECTED:
+            case DELIVERED:
+                orderDB_.alter(newOrder);
+                break;
+        }       
+
+        logger_.log(LogLevel.INFO, "Order processed: " + newOrder.stringID());
     }
 
     /**
@@ -61,6 +80,6 @@ public class OrderManager extends DefaultConsumer {
 
     private Logger logger_;
     private ConfigParser config_;
-    private String auditLogQueueName_;
-    private String stockManagerQueue_;
+    private OrderDB orderDB_;
+    // private String auditLogQueueName_;
 }

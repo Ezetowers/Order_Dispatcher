@@ -26,8 +26,6 @@ public class MainClass {
         Logger logger = Logger.getInstance();
 
         try {
-            // Create the instance to avoid calling the mukry, 
-            // obscure and infame static methods of Java
             MainClass app = new MainClass();
             config.init(argv[1]);
             app.initLogger(config, argv[0]);
@@ -48,6 +46,10 @@ public class MainClass {
 
             Consumer consumer = new OrderManager(channel);
             channel.basicConsume(orderQueue, true, consumer);
+        }
+        catch(SecurityException e) {
+            logger.log(LogLevel.ERROR, "Cannot create OrderDB Directory. "
+                + "Change folder permissions or point out to another path.");
         }
         catch (IllegalArgumentException e) {
             // We couldn't open the logger. Just exit

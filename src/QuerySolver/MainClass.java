@@ -1,9 +1,10 @@
-package stockManager;
+package querySolver;
 
 // Program includes
 import configParser.ConfigParser;
 import logger.Logger;
 import logger.LogLevel;
+import querySolver.QuerySolver;
 
 // External libraries includes
 import com.rabbitmq.client.ConnectionFactory;
@@ -34,17 +35,17 @@ public class MainClass {
             Connection connection = factory.newConnection();
             Channel channel = connection.createChannel();
 
-            String stockQueue = config.get("QUEUES", "stock-manager-queue");
+            String queryQueue = config.get("QUEUES", "query-queue");
             // To secure fairness between the processes
             channel.basicQos(1);
-            channel.queueDeclare(stockQueue, 
+            channel.queueDeclare(queryQueue, 
                                  false, 
                                  false, 
                                  false, 
                                  null);
 
-            Consumer consumer = new StockManager(channel);
-            channel.basicConsume(stockQueue, true, consumer);
+            Consumer consumer = new QuerySolver(channel);
+            channel.basicConsume(queryQueue, true, consumer);
         }
         catch (IllegalArgumentException e) {
             // We couldn't open the logger. Just exit
@@ -66,7 +67,7 @@ public class MainClass {
 
         Logger logger = Logger.getInstance();
         logger.init(logFileName, LogLevel.parse(logLevel));
-        logger.setPrefix("[STOCK_MANAGER " + processNumber + "]");
+        logger.setPrefix("[QUERY_SOLVER " + processNumber + "]");
         logger.log(LogLevel.DEBUG, "Process started");
     }
 }

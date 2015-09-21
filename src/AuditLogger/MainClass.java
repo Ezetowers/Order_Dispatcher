@@ -28,8 +28,6 @@ public class MainClass {
         Logger logger = Logger.getInstance();
 
         try {
-            // Create the instance to avoid calling the mukry, 
-            // obscure and infame static methods of Java
             MainClass app = new MainClass();
             config.init(argv[1]);
             app.initLogger(config, argv[0]);

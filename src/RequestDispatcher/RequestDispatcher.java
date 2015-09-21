@@ -35,6 +35,8 @@ public class RequestDispatcher extends DefaultConsumer {
         Order newOrder = (Order) SerializationUtils.deserialize(body);
 
         newOrder.state(OrderState.RECEIVED);
+        body = SerializationUtils.serialize(newOrder);
+        
         this.getChannel().basicPublish("", orderManagerQueueName_, null, body);
         logger_.log(LogLevel.DEBUG, "Order received: " + newOrder.stringID());
 

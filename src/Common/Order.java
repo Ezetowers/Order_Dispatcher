@@ -10,9 +10,19 @@ import java.util.UUID;
 public class Order implements Serializable {
     public Order(Product productType, Long amount) {
         state_ = OrderState.TO_BE_PROCESSED;
-        clientName_ = "JON SKEET";
         productType_ = productType;
         amount_ = amount;
+        uuid_ = UUID.randomUUID();
+    }
+
+    public Order(UUID uuid,
+                 Product productType,
+                 Long amount,
+                 OrderState state) {
+        uuid_ = uuid;
+        productType_ = productType;
+        amount_ = amount;
+        state_ = state;
     }
 
     public UUID id() {
@@ -49,6 +59,20 @@ public class Order implements Serializable {
         return aux;
     }
 
+    /**
+     * @brief Return a representation of the order just with a truncated 
+     * UUID and the state of the order
+     */
+    public String toStringShort() {
+        String aux = "";
+        // Reduce the size of the UUID to better log size comprehension
+        aux += "Order ID: " + uuid_.toString().substring(0,6) + " - ";
+        aux += "State: " + state_.toString() + " - ";
+        aux += "Product Type: " + productType_.toString() + " - ";
+        aux += "Amount: " + amount_;
+        return aux;
+    }
+
     public String toStringFull() {
         String aux = "";
         // Reduce the size of the UUID to better log size comprehension
@@ -60,8 +84,7 @@ public class Order implements Serializable {
     }
 
     private OrderState state_;
-    private String clientName_;
-    private final UUID uuid_ = UUID.randomUUID();
+    private final UUID uuid_;
     // FIXME: Create a enum or something like that to represent this
     private Product productType_;
     private Long amount_;

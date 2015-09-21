@@ -1,5 +1,8 @@
 package client;
 
+import java.util.Iterator;
+import java.util.UUID;
+import java.util.ArrayList;
 import java.lang.Math;
 import java.lang.System;
 import java.util.Random;
@@ -20,50 +23,28 @@ import logger.Logger;
 import logger.LogLevel;
 
 public class MainClass {
-    public MainClass() {
+    public MainClass(String[] argv) {
         randomGenerator_ = new Random(System.currentTimeMillis());
+        config_ = ConfigParser.getInstance();
+        logger_ = Logger.getInstance();
+        ordersKeys_ = new ArrayList<UUID>();
+
+        config_.init(argv[1]);
+        this.initLogger(argv[0]);
     }
 
-    public static void main(String[] argv) {
-        ConfigParser config = ConfigParser.getInstance();                                        
+    public static void main(String[] argv) throws InterruptedException {
+        ConfigParser config = ConfigParser.getInstance();
         Logger logger = Logger.getInstance();
-
         try {
-            // Create the instance to avoid calling the mukry, 
-            // obscure and infame static methods of Java
-            MainClass app = new MainClass();
-            config.init(argv[1]);
-            app.initLogger(config, argv[0]);
+            MainClass app = new MainClass(argv);
+            app.initRabbit();
+            app.sendOrders();
 
-            ConnectionFactory factory = new ConnectionFactory();
-            factory.setHost(config.get("MAIN", "server-address", "localhost"));
-            Connection connection = factory.newConnection();
-            Channel channel = connection.createChannel();
+            Thread.sleep(5000);
 
-            String clientQueue = config.get("QUEUES", "client-queue");
-            channel.queueDeclare(clientQueue, 
-                                 false, 
-                                 false, 
-                                 false, 
-                                 null);
-
-            int ordersToCreate = 
-                Integer.parseInt(config.get("CLIENT", 
-                                            "amount-orders-to-simulate",
-                                            "1"));
-            logger.log(LogLevel.DEBUG, "Orders to simulate: " 
-                + ordersToCreate);
-
-            for (int i = 0; i < ordersToCreate; ++i) {
-                Order order = app.generateRandomOrder();
-                byte[] data = SerializationUtils.serialize(order);
-
-                logger.log(LogLevel.DEBUG, "Sending order: " + order.stringID());
-                channel.basicPublish("", clientQueue, null, data);
-            }
-
-            channel.close();
-            connection.close();
+            app.queryOrders();
+            app.terminate();
         }
         catch (IllegalArgumentException e) {
             // We couldn't open the logger. Just exit
@@ -78,10 +59,10 @@ public class MainClass {
         }
     }
 
-    private void initLogger(ConfigParser config, String processNumber) 
+    private void initLogger(String processNumber) 
     throws IllegalArgumentException {
-        String logFileName = config.get("MAIN", "log-file");
-        String logLevel = config.get("MAIN", "log-level");
+        String logFileName = config_.get("MAIN", "log-file");
+        String logLevel = config_.get("MAIN", "log-level");
 
         Logger logger = Logger.getInstance();
         logger.init(logFileName, LogLevel.parse(logLevel));
@@ -89,10 +70,86 @@ public class MainClass {
         logger.log(LogLevel.DEBUG, "Process started");
     }
 
-    public Order generateRandomOrder() {
+    public void initRabbit() throws IOException,
+                                    TimeoutException,
+                                    IllegalArgumentException {
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost(config_.get("MAIN", "server-address", "localhost"));
+        connection_ = factory.newConnection();
+        channel_ = connection_.createChannel();
+
+        clientQueue_ = config_.get("QUEUES", "client-queue");
+        channel_.queueDeclare(clientQueue_, 
+                             false, 
+                             false, 
+                             false, 
+                             null);
+
+        queryQueue_ = config_.get("QUEUES", "query-queue");
+        channel_.queueDeclare(queryQueue_, 
+                             false, 
+                             false, 
+                             false,
+                             null);
+    }
+
+    public void terminate() throws IOException, TimeoutException {
+        channel_.close();
+        connection_.close();
+    }
+
+    public void sendOrders() throws IOException {
+        int ordersToCreate = 
+            Integer.parseInt(config_.get("CLIENT", 
+                                         "amount-orders-to-simulate",
+                                         "1"));
+        logger_.log(LogLevel.DEBUG, "Orders to simulate: " 
+            + ordersToCreate);
+
+        for (int i = 0; i < ordersToCreate; ++i) {
+            Order order = this.generateRandomOrder();
+            byte[] data = SerializationUtils.serialize(order);
+
+            // Store the UUID generated to then make a query to the system
+            ordersKeys_.add(order.id());
+
+            logger_.log(LogLevel.DEBUG, "Sending order: " + order.stringID());
+            channel_.basicPublish("", clientQueue_, null, data);
+        }
+    }
+
+    public void queryOrders() throws IOException {
+        int amountQueries = 
+            Integer.parseInt(config_.get("CLIENT", 
+                                         "amount-queries-to-simulate",
+                                         "1"));
+
+        Iterator<UUID> it = ordersKeys_.iterator();
+        while (amountQueries > 0) {
+            --amountQueries;
+
+            UUID key = it.next();
+            byte[] data = SerializationUtils.serialize(key);
+            logger_.log(LogLevel.DEBUG, "Querying order: " + key.toString());
+            channel_.basicPublish("", queryQueue_, null, data);
+
+            if (! it.hasNext()) {
+                it = ordersKeys_.iterator();
+            }
+        }
+    }
+
+    private Order generateRandomOrder() {
         long amount = Math.abs(randomGenerator_.nextInt() % 10) + 1;
         return new Order(Product.randomProduct(), amount);
     }
 
-    private Random randomGenerator_; 
+    private Logger logger_;
+    private ConfigParser config_;
+    private Random randomGenerator_;
+    private Channel channel_;
+    private Connection connection_;
+    private String clientQueue_;
+    private String queryQueue_;
+    private ArrayList<UUID> ordersKeys_;
 }

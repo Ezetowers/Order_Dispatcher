@@ -1,5 +1,6 @@
 package stockManager;
 
+import java.nio.channels.OverlappingFileLockException;
 import java.lang.System;
 import java.io.EOFException;
 import java.nio.ByteBuffer;
@@ -22,27 +23,33 @@ public class StockDB {
         map_ = new HashMap<Product, Long>();
 
         File file = new File(dbFilePath);
-        if (! file.exists()) {
+        // Taken from the JavaDocs
+        // http://docs.oracle.com/javase/7/docs/api/java/io/File.
+        // html#createNewFile()
+        // Atomically creates a new, empty file named by this abstract 
+        // pathname if and only if a file with this name does not yet 
+        // exist. The check for the existence of the file and the creation 
+        // of the file if it does not exist are a single operation that is 
+        // atomic with respect to all other filesystem activities that 
+        // might affect the file.
+        file.createNewFile();
+        file_ = new RandomAccessFile(dbFilePath, "rwd");
+        FileLock lock = file_.getChannel().lock();
+
+        if (file.length() == 0) {
+            this.createEmptyStockFile();
             logger_.log(LogLevel.WARNING, 
                 "StockDB file doesn't exists." 
                 + " Proceed to create it. StockDB file: " + dbFilePath);
-            file.createNewFile();
-
-            file_ = new RandomAccessFile(dbFilePath, "rwd");
-            this.createEmptyStockFile();
         }
-        else {
-            file_ = new RandomAccessFile(dbFilePath, "rwd");
-        }
+        lock.release();
     }
-
 
     private void createEmptyStockFile() throws IOException {
         for (Product product : Product.values()) {
-            map_.put(product, new Long(14871213));
+            map_.put(product, new Long(10000));
         }
 
-        FileLock lock = file_.getChannel().lock();
         for (Map.Entry<Product, Long> entry : map_.entrySet()) {
             String key = String.format("%-10s", entry.getKey().toString());
             file_.write(key.getBytes());
@@ -53,9 +60,7 @@ public class StockDB {
         }
 
         file_.getFD().sync();
-        lock.release();
     }
-
     
     private void refreshStockFile() throws IOException {
         byte[] buffer = new byte[PRODUCT_KEY_MAX_SIZE];

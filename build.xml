@@ -19,6 +19,8 @@
     <property name="stock-class"      value="stockManager.MainClass"/>
     <property name="order-manager-process-name" value="OrderManager"/>
     <property name="order-class"      value="orderManager.MainClass"/>
+    <property name="query-solver-process-name" value="QuerySolver"/>
+    <property name="query-solver-class"      value="querySolver.MainClass"/>
 
     <path id="classpath">
         <fileset dir="${lib.dir}" includes="**/*.jar"/>
@@ -82,6 +84,14 @@
             </manifest>
         </jar>
 
+        <jar destfile="${jar.dir}/${query-solver-process-name}.jar" 
+             basedir="${classes.dir}">
+            <manifest>
+                <attribute name="query-solver-class" 
+                           value="${query-solver-class}"/>
+            </manifest>
+        </jar>
+
         <jar destfile="${jar.dir}/${request-dispatcher-process-name}.jar" 
              basedir="${classes.dir}">
             <manifest>
@@ -120,6 +130,14 @@
             <manifest>
                 <attribute name="order-manager-class" 
                            value="${order-manager-class}"/>
+            </manifest>
+        </jar>
+
+        <jar destfile="${jar.dir}/${query-solver-process-name}.jar" 
+             basedir="${classes.dir}">
+            <manifest>
+                <attribute name="query-solver-class" 
+                           value="${query-solver-class}"/>
             </manifest>
         </jar>
 

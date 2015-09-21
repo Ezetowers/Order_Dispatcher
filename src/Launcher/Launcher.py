@@ -43,9 +43,9 @@ def main():
                 processList.append(process)
 
     # Wait for an input
-    user_input = raw_input("Write 'Mondongo' to terminate the system: ")
-    while user_input != "Mondongo":
-        user_input = raw_input("Write 'Mondongo' to terminate the system: ")
+    user_input = raw_input("Write 'STOP' to terminate the system: ")
+    while user_input != "STOP":
+        user_input = raw_input("Write 'STOP' to terminate the app run: ")
 
     print "Proceed to terminate system..."
     for process in processList:
