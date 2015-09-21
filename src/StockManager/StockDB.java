@@ -67,60 +67,6 @@ public class StockDB {
             file_.write(b.array());
         }
     }
-    
-    /* private void refreshStockFile() throws IOException {
-        byte[] buffer = new byte[PRODUCT_KEY_MAX_SIZE];
-        file_.seek(0);
-
-        try {
-            while(true) {
-                int readBytes = file_.read(buffer, 0, PRODUCT_KEY_MAX_SIZE);
-
-                if (readBytes == -1) {
-                    // EOF found
-                    return;
-                }
-
-                Product key = Product.valueOf(new String(buffer).trim());
-                Long value = new Long(file_.readLong());
-
-                logger_.log(LogLevel.TRACE, "KEY: " + key.toString() 
-                    + " - VALUE: " + value);
-                map_.put(key, value);
-            }
-        }
-        catch (EOFException e) {
-            // EOF found
-        }
-    }*/
-
-    /* public boolean decreaseStock(Product product, Long amount) 
-    throws IOException {
-        // Refresh stock before doing something. Maybe the Providers
-        // added a batch
-        FileLock lock = file_.getChannel().lock();
-        this.refreshStockFile();
-        boolean stockUpdated = false;
-
-        Long productStock = map_.get(product);
-        if (productStock >= amount) {
-            Long newProductStock = productStock - amount;
-            this.setProductStock(product, newProductStock);
-
-            logger_.log(LogLevel.TRACE, "Decreasing stock of product " 
-                + product.toString() + ". PreviousStock: " 
-                + productStock + " - UpdatedStock: " + newProductStock);
-            stockUpdated = true;
-        }
-        else {
-            logger_.log(LogLevel.TRACE, "Order cannot be accepted. " 
-                + "Not enough stock of product " + product.toString() 
-                + ". ProductStock: " + productStock 
-                + " - OrderAmount: " + amount);
-        }
-        lock.release();
-        return stockUpdated;
-    }*/
 
     // This method is very long, but don't split it in functions because
     // to performance problems
@@ -254,63 +200,7 @@ public class StockDB {
         return true;
     }
 
-    // FIXME: Refactor this methods to as efficient as decreaseStock. Try
-    // to reutilize code also
-    /* public boolean increaseStock(Product product, Long amount) 
-    throws IOException {
-        // Refresh stock before doing something. Maybe the Providers
-        // added a batch
-        FileLock lock = file_.getChannel().lock();
-        this.refreshStockFile();
-
-        Long productStock = map_.get(product);
-        Long newProductStock = productStock + amount;
-        this.setProductStock(product, newProductStock);
-
-        logger_.log(LogLevel.NOTICE, "Increasing stock of product " 
-            + product.toString() + ". PreviousStock: " 
-            + productStock + " - UpdatedStock: " + newProductStock);
-        lock.release();
-
-        // TODO: Check if the product is greater than a constant
-        return true;
-    }*/
-
-    /* private void setProductStock(Product product, Long amount) 
-    throws IOException {
-        byte[] buffer = new byte[PRODUCT_KEY_MAX_SIZE];
-        file_.seek(0);
-
-        try {
-            while(true) {
-                file_.read(buffer, 0, PRODUCT_KEY_MAX_SIZE);
-                Product key = Product.valueOf(new String(buffer).trim());
-                if (key != product) {
-                    // Jump to the next entry
-                    file_.skipBytes(8);
-                    continue;
-                }
-
-                // We found the product, update it
-                ByteBuffer b = ByteBuffer.allocate(8);
-                b.putLong(amount);
-                file_.write(b.array());
-                file_.getFD().sync();
-                break;
-            }
-
-        }
-        catch (EOFException e) {
-            // If this happen, then the product does not exists and we have
-            // a bug in the system. ABORT!
-            logger_.log(LogLevel.ERROR, "Product does not exists. Product: " 
-                + product.toString());
-            System.exit(-1);
-        }
-    }*/
-
     private Logger logger_;
-    private HashMap<Product, Long> map_;
     private RandomAccessFile file_;
     private static final int PRODUCT_KEY_MAX_SIZE = 10;
 }
