@@ -44,7 +44,7 @@ public class MainClass {
                                  false, 
                                  null);
 
-            Consumer consumer = new Employer(channel);
+            Consumer consumer = new Employer(channel, deliveryQueue);
             channel.basicConsume(deliveryQueue, true, consumer);
         }
         catch (IllegalArgumentException e) {

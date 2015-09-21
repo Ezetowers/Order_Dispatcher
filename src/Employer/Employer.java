@@ -16,15 +16,23 @@ import logger.Logger;
 import logger.LogLevel;
 
 import java.io.IOException;
-
+import java.util.concurrent.TimeoutException;
 
 public class Employer extends DefaultConsumer {
-    public Employer(Channel channel) throws IllegalArgumentException,
-                                            IOException {    
+    public Employer(Channel channel, 
+                    String channelName) throws IllegalArgumentException,
+                                               IOException {    
         super(channel);
         logger_ = Logger.getInstance();
         config_ = ConfigParser.getInstance();
         this.initQueues();
+
+        channelName_ = channelName;
+        channelClosed_ = false;
+
+        amountOrdersToProcess_ = 
+            Integer.parseInt(config_.get("EMPLOYER", 
+                                         "amount-orders-to-process"));
     }
 
     @Override
@@ -32,6 +40,10 @@ public class Employer extends DefaultConsumer {
                                Envelope envelope, 
                                AMQP.BasicProperties properties, 
                                byte[] body) throws IOException {
+        if (channelClosed_) {
+            return;
+        }
+
         Order newOrder = (Order) SerializationUtils.deserialize(body);
         // Change the state a we should have process the order and be ready
         // to deliver it
@@ -40,6 +52,13 @@ public class Employer extends DefaultConsumer {
 
         logger_.log(LogLevel.DEBUG, "Order delivered: " + newOrder.stringID());
         this.getChannel().basicPublish("", orderManagerQueueName_, null, body);
+
+        --amountOrdersToProcess_;
+        if (amountOrdersToProcess_ == 0) {
+            logger_.log(LogLevel.NOTICE, "Closing Employer.");
+            this.getChannel().basicCancel(channelName_);
+            channelClosed_ = true;
+        }
     }
 
     /**
@@ -61,4 +80,7 @@ public class Employer extends DefaultConsumer {
     private Logger logger_;
     private ConfigParser config_;
     private String orderManagerQueueName_;
+    private String channelName_;
+    private int amountOrdersToProcess_;
+    private boolean channelClosed_;
 }
