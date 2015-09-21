@@ -4,8 +4,8 @@ public enum LogLevel {
     ERROR(1), 
     CRITIC(2), 
     WARNING(3), 
-    INFO(4), 
-    NOTICE(5), 
+    NOTICE(4), 
+    INFO(5), 
     DEBUG(6), 
     TRACE(7);
 
@@ -72,8 +72,8 @@ public enum LogLevel {
     private final String PREFIX_ARRAY[] = {"[ERROR]",
                                            "[CRITIC]",
                                            "[WARNING]",
-                                           "[INFO]",
                                            "[NOTICE]",
+                                           "[INFO]",
                                            "[DEBUG]",
                                            "[TRACE]"};
 }

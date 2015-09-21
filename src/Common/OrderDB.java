@@ -95,7 +95,6 @@ public class OrderDB {
             file.seek(0);
             while(true) {
                 int readBytes = file.read(buffer, 0, OrderDBEntry.UUID_SIZE);
-                logger_.log(LogLevel.TRACE, "Bytes Read: " + readBytes);
                 if (readBytes == -1) {
                     // EOF reached
                     return -1;

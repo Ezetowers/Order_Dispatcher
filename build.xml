@@ -7,20 +7,34 @@
     <property name="jar.dir"     value="${build.dir}/jar"/>
 
     <!-- Particular Properties for every Program -->
-    <property name="client-process-name" value="Client"/>
-    <property name="client-class"      value="client.MainClass"/>
-    <property name="request-dispatcher-process-name" 
-              value="RequestDispatcher"/>
-    <property name="request-dispatcher-class"      
-              value="requestDispatcher.MainClass"/>
-    <property name="audit-process-name" value="AuditLogger"/>
-    <property name="audit-class"      value="auditLogger.MainClass"/>
-    <property name="stock-manager-process-name" value="StockManager"/>
-    <property name="stock-class"      value="stockManager.MainClass"/>
-    <property name="order-manager-process-name" value="OrderManager"/>
-    <property name="order-class"      value="orderManager.MainClass"/>
-    <property name="query-solver-process-name" value="QuerySolver"/>
-    <property name="query-solver-class"      value="querySolver.MainClass"/>
+    <property name=   "client-process-name" 
+              value=  "Client"/>
+    <property name=   "client-class"      
+               value= "client.MainClass"/>
+    <property name=   "request-dispatcher-process-name" 
+              value=  "RequestDispatcher"/>
+    <property name=   "request-dispatcher-class" 
+              value=  "requestDispatcher.MainClass"/>
+    <property name=   "audit-process-name" 
+              value=  "AuditLogger"/>
+    <property name=   "audit-class"      
+              value=  "auditLogger.MainClass"/>
+    <property name=   "stock-manager-process-name" 
+              value=  "StockManager"/>
+    <property name=   "stock-class"      
+              value=  "stockManager.MainClass"/>
+    <property name=   "order-manager-process-name" 
+              value=  "OrderManager"/>
+    <property name=   "order-class"      
+              value=  "orderManager.MainClass"/>
+    <property name=   "query-solver-process-name" 
+              value=  "QuerySolver"/>
+    <property name=   "query-solver-class"      
+              value=  "querySolver.MainClass"/>
+    <property name=   "stock-provider-process-name" 
+              value=  "StockProvider"/>
+    <property name=   "stock-provider-class"   
+              value=  "stockProvider.MainClass"/>
 
     <path id="classpath">
         <fileset dir="${lib.dir}" includes="**/*.jar"/>
@@ -76,6 +90,14 @@
             </manifest>
         </jar>
 
+        <jar destfile="${jar.dir}/${stock-provider-process-name}.jar" 
+             basedir="${classes.dir}">
+            <manifest>
+                <attribute name="stock-provider-class" 
+                           value="${stock-provider-class}"/>
+            </manifest>
+        </jar>
+
         <jar destfile="${jar.dir}/${order-manager-process-name}.jar" 
              basedir="${classes.dir}">
             <manifest>
@@ -122,6 +144,14 @@
             <manifest>
                 <attribute name="stock-manager-class" 
                            value="${stock-manager-class}"/>
+            </manifest>
+        </jar>
+
+        <jar destfile="${jar.dir}/${stock-provider-process-name}.jar" 
+             basedir="${classes.dir}">
+            <manifest>
+                <attribute name="stock-provider-class" 
+                           value="${stock-provider-class}"/>
             </manifest>
         </jar>
 

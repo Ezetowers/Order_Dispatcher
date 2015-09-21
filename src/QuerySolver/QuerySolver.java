@@ -40,7 +40,7 @@ public class QuerySolver extends DefaultConsumer {
 
         Order order = orderDB_.get(orderKey);
         if (order != null) {
-            logger_.log(LogLevel.INFO, "Order " + orderKey.toString() 
+            logger_.log(LogLevel.NOTICE, "Order " + orderKey.toString() 
                 + " - State: " + order.state().toString());
         }
         else {

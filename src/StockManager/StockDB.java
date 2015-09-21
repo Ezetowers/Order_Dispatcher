@@ -68,7 +68,7 @@ public class StockDB {
         }
     }
     
-    private void refreshStockFile() throws IOException {
+    /* private void refreshStockFile() throws IOException {
         byte[] buffer = new byte[PRODUCT_KEY_MAX_SIZE];
         file_.seek(0);
 
@@ -92,9 +92,9 @@ public class StockDB {
         catch (EOFException e) {
             // EOF found
         }
-    }
+    }*/
 
-    public boolean decreaseStock(Product product, Long amount) 
+    /* public boolean decreaseStock(Product product, Long amount) 
     throws IOException {
         // Refresh stock before doing something. Maybe the Providers
         // added a batch
@@ -120,11 +120,12 @@ public class StockDB {
         }
         lock.release();
         return stockUpdated;
-    }
+    }*/
 
-    /*public boolean decreaseStock(Product product, Long amount) 
+    // This method is very long, but don't split it in functions because
+    // to performance problems
+    public boolean decreaseStock(Product product, Long amount) 
     throws IOException {
-        FileLock lock = file_.getChannel().lock();
         byte[] buffer = new byte[PRODUCT_KEY_MAX_SIZE];
         file_.seek(0);
 
@@ -132,7 +133,7 @@ public class StockDB {
             while(true) {
                 int readBytes = file_.read(buffer, 0, PRODUCT_KEY_MAX_SIZE);
                 if (readBytes == -1) {
-                    lock.release();
+                    // lock.release();
                     return false;
                 }
 
@@ -157,7 +158,6 @@ public class StockDB {
                         + "Not enough stock of product " + product.toString() 
                         + ". ProductStock: " + productStock 
                         + " - OrderAmount: " + amount);
-                    lock.release();
                     return false;
                 }
 
@@ -165,11 +165,18 @@ public class StockDB {
                 long newStock = productStock - amount;
                 ByteBuffer longBuf = ByteBuffer.allocate(Long.BYTES);
                 longBuf.putLong(newStock);
+
+                // Just lock the part of the file to me modified
+                FileLock lock = file_.getChannel().lock(file_.getFilePointer(),
+                                                        Long.BYTES,
+                                                        false);
                 file_.write(longBuf.array());
+                lock.release();
 
                 logger_.log(LogLevel.DEBUG, "Decreasing stock of product " 
                     + product.toString() + ". PreviousStock: " 
                     + productStock + " - UpdatedStock: " + newStock);
+                break;
             }
         }
         catch (EOFException e) {
@@ -180,13 +187,76 @@ public class StockDB {
             System.exit(-1);
         }
 
-        lock.release();
+        // lock.release();
         return true;
-    }*/
+    }
+
+
+    // This method is very long, but don't split it in functions because
+    // to performance problems
+    public boolean increaseStock(Product product, Long amount) 
+    throws IOException {
+        byte[] buffer = new byte[PRODUCT_KEY_MAX_SIZE];
+        file_.seek(0);
+
+        try {
+            while(true) {
+                int readBytes = file_.read(buffer, 0, PRODUCT_KEY_MAX_SIZE);
+                if (readBytes == -1) {
+                    // lock.release();
+                    return false;
+                }
+
+                Product key = Product.valueOf(new String(buffer).trim());
+                if (key != product) {
+                    // Jump to the next entry
+                    file_.skipBytes(Long.BYTES);
+                    continue;
+                }
+
+                // Product found, proceed to update value
+                // Read the amount of the stock to update it, and go back to 
+                // the same position
+                file_.read(buffer, 0, Long.BYTES);
+                file_.seek(file_.getFilePointer() - Long.BYTES);
+
+                // Check if there is stock of the file
+                ByteBuffer b = ByteBuffer.wrap(buffer);
+                long productStock = b.getLong();
+
+                // There is stock, update the StockDB
+                long newStock = productStock + amount;
+                ByteBuffer longBuf = ByteBuffer.allocate(Long.BYTES);
+                longBuf.putLong(newStock);
+
+                // Just lock the part of the file to me modified
+                FileLock lock = file_.getChannel().lock(file_.getFilePointer(),
+                                                        Long.BYTES,
+                                                        false);
+                file_.write(longBuf.array());
+                lock.release();
+
+                logger_.log(LogLevel.NOTICE, "Increasing stock of product " 
+                    + product.toString() + ". PreviousStock: " 
+                    + productStock + " - UpdatedStock: " + newStock);
+                break;
+            }
+        }
+        catch (EOFException e) {
+            // If this happen, then the product does not exists and we have
+            // a bug in the system. ABORT!
+            logger_.log(LogLevel.ERROR, "Product does not exists. Product: " 
+                + product.toString());
+            System.exit(-1);
+        }
+
+        // lock.release();
+        return true;
+    }
 
     // FIXME: Refactor this methods to as efficient as decreaseStock. Try
     // to reutilize code also
-    public boolean increaseStock(Product product, Long amount) 
+    /* public boolean increaseStock(Product product, Long amount) 
     throws IOException {
         // Refresh stock before doing something. Maybe the Providers
         // added a batch
@@ -204,9 +274,9 @@ public class StockDB {
 
         // TODO: Check if the product is greater than a constant
         return true;
-    }
+    }*/
 
-    private void setProductStock(Product product, Long amount) 
+    /* private void setProductStock(Product product, Long amount) 
     throws IOException {
         byte[] buffer = new byte[PRODUCT_KEY_MAX_SIZE];
         file_.seek(0);
@@ -237,7 +307,7 @@ public class StockDB {
                 + product.toString());
             System.exit(-1);
         }
-    }
+    }*/
 
     private Logger logger_;
     private HashMap<Product, Long> map_;
