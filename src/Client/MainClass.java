@@ -40,9 +40,6 @@ public class MainClass {
             MainClass app = new MainClass(argv);
             app.initRabbit();
             app.sendOrders();
-
-            Thread.sleep(5000);
-
             app.queryOrders();
             app.terminate();
         }

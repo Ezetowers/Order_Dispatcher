@@ -39,8 +39,13 @@ public class StockManager extends DefaultConsumer {
         Order newOrder = (Order) SerializationUtils.deserialize(body);
         logger_.log(LogLevel.TRACE, "Order received: " + newOrder.toString());
 
+
+        elapsedTime_ = System.currentTimeMillis();
         boolean enoughStock = stockDB_.decreaseStock(newOrder.productType(), 
                                                      newOrder.amount());
+        elapsedTime_ = System.currentTimeMillis() - elapsedTime_;
+        logger_.log(LogLevel.NOTICE, "decreaseStock. Time: " 
+            + elapsedTime_ + " ms.");
 
         if (enoughStock) {
             newOrder.state(OrderState.ACCEPTED);
@@ -75,4 +80,7 @@ public class StockManager extends DefaultConsumer {
     private ConfigParser config_;
     private String orderManagerQueueName_;
     private StockDB stockDB_;
+
+    // For performance stats
+    private long elapsedTime_;
 }

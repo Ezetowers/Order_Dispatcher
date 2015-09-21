@@ -1,5 +1,6 @@
 package orderManager;
 
+import java.lang.System;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.Channel;
@@ -40,15 +41,23 @@ public class OrderManager extends DefaultConsumer {
         logger_.log(LogLevel.DEBUG, "Order received: " + newOrder.stringID());
 
         OrderState state = newOrder.state();
+        elapsedTime_ = System.currentTimeMillis();
+
         switch(newOrder.state()) {
             case RECEIVED:
                 // Add the order to the DB
                 orderDB_.add(newOrder);
+                elapsedTime_ = System.currentTimeMillis() - elapsedTime_;
+                logger_.log(LogLevel.NOTICE, "OrderDB::add. Time: " 
+                    + elapsedTime_ + " ms.");
                 break;
             case ACCEPTED:
             case REJECTED:
             case DELIVERED:
                 orderDB_.alter(newOrder);
+                elapsedTime_ = System.currentTimeMillis() - elapsedTime_;
+                logger_.log(LogLevel.NOTICE, "OrderDB::alter. Time: " 
+                    + elapsedTime_ + " ms.");
                 break;
         }       
 
@@ -81,5 +90,5 @@ public class OrderManager extends DefaultConsumer {
     private Logger logger_;
     private ConfigParser config_;
     private OrderDB orderDB_;
-    // private String auditLogQueueName_;
+    private long elapsedTime_;
 }

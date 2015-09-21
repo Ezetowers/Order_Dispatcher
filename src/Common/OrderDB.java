@@ -1,5 +1,6 @@
 package common;
 
+import java.lang.System;
 import java.io.EOFException;
 import java.util.UUID;
 import java.nio.ByteBuffer;
@@ -33,7 +34,7 @@ public class OrderDB {
     }
 
     public void add(Order order) throws IOException {
-        RandomAccessFile file = this.getOrderFile(order);
+        RandomAccessFile file = this.getOrderFile(order, "rwd");
         FileLock lock = file.getChannel().lock();
         OrderDBEntry entry = new OrderDBEntry(order);
 
@@ -45,9 +46,16 @@ public class OrderDB {
     }
 
     public void alter(Order order) throws IOException {
-        RandomAccessFile file = this.getOrderFile(order);
+        RandomAccessFile file = this.getOrderFile(order, "rwd");
         FileLock lock = file.getChannel().lock();
         long offset = this.getOffsetToEntry(file, order.id());
+
+        // Sanity check
+        if (offset == -1) {
+            // This should not happen. Stop program
+            logger_.log(LogLevel.ERROR, "Order doesn't exists in alter");
+            System.exit(-1);
+        }
 
         // Do a have to do this or the file is in the correct offset?
         file.seek(offset);
@@ -59,9 +67,15 @@ public class OrderDB {
     }
 
     public Order get(UUID orderKey) throws IOException {
-        RandomAccessFile file = this.getOrderFile(orderKey);
+        RandomAccessFile file = this.getOrderFile(orderKey, "rwd");
         FileLock lock = file.getChannel().lock();
         long offset = this.getOffsetToEntry(file, orderKey);
+
+        if (offset == -1) {
+            lock.release();
+            file.close();
+            return null;
+        }
 
         byte[] entryBuffer = new byte[OrderDBEntry.ENTRY_SIZE];
         file.seek(offset);
@@ -82,6 +96,10 @@ public class OrderDB {
             while(true) {
                 int readBytes = file.read(buffer, 0, OrderDBEntry.UUID_SIZE);
                 logger_.log(LogLevel.TRACE, "Bytes Read: " + readBytes);
+                if (readBytes == -1) {
+                    // EOF reached
+                    return -1;
+                }
 
                 // Create a UUID
                 ByteBuffer bb = ByteBuffer.wrap(buffer);
@@ -111,28 +129,29 @@ public class OrderDB {
     /**
      * @brief Get the file where the order must be stored in the DB     
      **/
-    private RandomAccessFile getOrderFile(Order order) throws IOException {
+    private RandomAccessFile getOrderFile(Order order, String mode) 
+    throws IOException {
         String subUuid = order.stringID().substring(0, 2);
-        return this.getOrderFile(subUuid);
+        return this.getOrderFile(subUuid, mode);
 
     }
 
-    private RandomAccessFile getOrderFile(UUID uuid) throws IOException {
+    private RandomAccessFile getOrderFile(UUID uuid, String mode) 
+    throws IOException {
         String subUuid = uuid.toString().substring(0, 2);
-        return this.getOrderFile(subUuid);
+        return this.getOrderFile(subUuid, mode);
     }
 
-    private RandomAccessFile getOrderFile(String subUuid) throws IOException {
+    private RandomAccessFile getOrderFile(String subUuid, String mode) 
+    throws IOException {
         String fileName = dirPath_ + "/" + subUuid;
 
         // Again, we cannot check if the file exists. Just try to create it
         File orderFile = new File(fileName);
         orderFile.createNewFile();
-        return new RandomAccessFile(fileName, "rwd");
+        return new RandomAccessFile(fileName, mode);
     }
 
     private String dirPath_;
     private Logger logger_;
-
-    // private HashMap<String, Order> 
 }

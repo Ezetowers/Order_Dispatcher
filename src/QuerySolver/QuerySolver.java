@@ -39,8 +39,14 @@ public class QuerySolver extends DefaultConsumer {
             + orderKey.toString());
 
         Order order = orderDB_.get(orderKey);
-        logger_.log(LogLevel.INFO, "Order " + orderKey.toString() 
-            + " - State: " + order.state().toString());
+        if (order != null) {
+            logger_.log(LogLevel.INFO, "Order " + orderKey.toString() 
+                + " - State: " + order.state().toString());
+        }
+        else {
+            logger_.log(LogLevel.WARNING, "Order " + orderKey.toString() 
+                + " was not processed yet.");
+        }
     }
 
     private Logger logger_;

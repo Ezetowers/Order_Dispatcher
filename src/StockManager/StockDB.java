@@ -33,6 +33,14 @@ public class StockDB {
         // atomic with respect to all other filesystem activities that 
         // might affect the file.
         file.createNewFile();
+
+        // http://docs.oracle.com/javase/7/docs/api/java/io/
+        // RandomAccessFile.html#mode
+        // The "rwd" mode can be used to reduce the number of I/O operations 
+        // performed. Using "rwd" only requires updates to the file's content 
+        // to be written to storage; using "rws" requires updates to both the 
+        // file's content and its metadata to be written, which generally 
+        // requires at least one more low-level I/O operation.
         file_ = new RandomAccessFile(dbFilePath, "rwd");
         FileLock lock = file_.getChannel().lock();
 
@@ -58,8 +66,6 @@ public class StockDB {
             b.putLong(entry.getValue());
             file_.write(b.array());
         }
-
-        file_.getFD().sync();
     }
     
     private void refreshStockFile() throws IOException {
@@ -68,7 +74,13 @@ public class StockDB {
 
         try {
             while(true) {
-                file_.read(buffer, 0, PRODUCT_KEY_MAX_SIZE);
+                int readBytes = file_.read(buffer, 0, PRODUCT_KEY_MAX_SIZE);
+
+                if (readBytes == -1) {
+                    // EOF found
+                    return;
+                }
+
                 Product key = Product.valueOf(new String(buffer).trim());
                 Long value = new Long(file_.readLong());
 
@@ -95,13 +107,13 @@ public class StockDB {
             Long newProductStock = productStock - amount;
             this.setProductStock(product, newProductStock);
 
-            logger_.log(LogLevel.DEBUG, "Decreasing stock of product " 
+            logger_.log(LogLevel.TRACE, "Decreasing stock of product " 
                 + product.toString() + ". PreviousStock: " 
                 + productStock + " - UpdatedStock: " + newProductStock);
             stockUpdated = true;
         }
         else {
-            logger_.log(LogLevel.WARNING, "Order cannot be accepted. " 
+            logger_.log(LogLevel.TRACE, "Order cannot be accepted. " 
                 + "Not enough stock of product " + product.toString() 
                 + ". ProductStock: " + productStock 
                 + " - OrderAmount: " + amount);
@@ -110,6 +122,70 @@ public class StockDB {
         return stockUpdated;
     }
 
+    /*public boolean decreaseStock(Product product, Long amount) 
+    throws IOException {
+        FileLock lock = file_.getChannel().lock();
+        byte[] buffer = new byte[PRODUCT_KEY_MAX_SIZE];
+        file_.seek(0);
+
+        try {
+            while(true) {
+                int readBytes = file_.read(buffer, 0, PRODUCT_KEY_MAX_SIZE);
+                if (readBytes == -1) {
+                    lock.release();
+                    return false;
+                }
+
+                Product key = Product.valueOf(new String(buffer).trim());
+                if (key != product) {
+                    // Jump to the next entry
+                    file_.skipBytes(Long.BYTES);
+                    continue;
+                }
+
+                // Product found, proceed to update value
+                // Read the amount of the stock to update it, and go back to 
+                // the same position
+                file_.read(buffer, 0, Long.BYTES);
+                file_.seek(file_.getFilePointer() - Long.BYTES);
+
+                // Check if there is stock of the file
+                ByteBuffer b = ByteBuffer.wrap(buffer);
+                long productStock = b.getLong();
+                if (productStock < amount) {
+                    logger_.log(LogLevel.WARNING, "Order cannot be accepted. " 
+                        + "Not enough stock of product " + product.toString() 
+                        + ". ProductStock: " + productStock 
+                        + " - OrderAmount: " + amount);
+                    lock.release();
+                    return false;
+                }
+
+                // There is stock, update the StockDB
+                long newStock = productStock - amount;
+                ByteBuffer longBuf = ByteBuffer.allocate(Long.BYTES);
+                longBuf.putLong(newStock);
+                file_.write(longBuf.array());
+
+                logger_.log(LogLevel.DEBUG, "Decreasing stock of product " 
+                    + product.toString() + ". PreviousStock: " 
+                    + productStock + " - UpdatedStock: " + newStock);
+            }
+        }
+        catch (EOFException e) {
+            // If this happen, then the product does not exists and we have
+            // a bug in the system. ABORT!
+            logger_.log(LogLevel.ERROR, "Product does not exists. Product: " 
+                + product.toString());
+            System.exit(-1);
+        }
+
+        lock.release();
+        return true;
+    }*/
+
+    // FIXME: Refactor this methods to as efficient as decreaseStock. Try
+    // to reutilize code also
     public boolean increaseStock(Product product, Long amount) 
     throws IOException {
         // Refresh stock before doing something. Maybe the Providers

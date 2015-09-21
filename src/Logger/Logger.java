@@ -48,9 +48,10 @@ public class Logger {
         }
     }
 
-    public void terminate() {
+    public void terminate() throws IOException {
+        FileLock lock = null;
         try {
-            lock_.lock();
+            lock = fstream_.getChannel().lock();
             fstream_.close();
         }
         catch(IOException e) {
@@ -59,31 +60,26 @@ public class Logger {
             System.exit(-1);
         }
         finally {
-            lock_.unlock();
+            lock.release();
         }
     }
 
     public void log(LogLevel verbosity, String msg) {
-        try {
-            lock_.lock();
-            if (verbosity_.level() >= verbosity.level()) {
-                this.write(verbosity_.prefix(verbosity) + " " + msg);
-            }
-        }
-        finally {
-            lock_.unlock();
+        if (verbosity_.level() >= verbosity.level()) {
+            this.write(verbosity_.prefix(verbosity) + " " + msg);
         }
     }
 
     private void write(String msg) {
         try {
-            FileLock lock = fstream_.getChannel().lock();
             Date date = new Date();
             msg = dateFormat_.format(date) + " " + prefix_ + " " + msg + "\n";
             
+            FileLock lock = fstream_.getChannel().lock();
             fstream_.write(msg.getBytes());
             fstream_.flush();
-            fstream_.getFD().sync();
+            // Remove sync to enhace performance
+            // fstream_.getFD().sync();
             lock.release();
         }
         catch(IOException e) {
