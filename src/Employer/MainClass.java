@@ -1,6 +1,8 @@
 package employer;
 
 // Program includes
+import java.lang.Thread;
+import java.lang.Runtime;
 import configParser.ConfigParser;
 import logger.Logger;
 import logger.LogLevel;
@@ -20,13 +22,19 @@ import java.lang.IllegalArgumentException;
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
-public class MainClass {
+public class MainClass extends Thread {
+    public MainClass() {
+        logger_ = Logger.getInstance();
+    }
+
     public static void main(String[] argv) {
         ConfigParser config = ConfigParser.getInstance();                                        
         Logger logger = Logger.getInstance();
 
         try {
             MainClass app = new MainClass();
+            Runtime.getRuntime().addShutdownHook(app);
+
             config.init(argv[1]);
             app.initLogger(config, argv[0]);
 
@@ -70,4 +78,10 @@ public class MainClass {
         logger.setPrefix("[EMPLOYER " + processNumber + "]");
         logger.log(LogLevel.DEBUG, "Process started");
     }
+
+    public void run() {
+        logger_.log(LogLevel.NOTICE, "Program finished by signal.");
+    }
+
+    private Logger logger_;
 }

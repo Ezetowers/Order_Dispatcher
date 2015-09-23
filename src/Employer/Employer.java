@@ -52,13 +52,6 @@ public class Employer extends DefaultConsumer {
 
         logger_.log(LogLevel.DEBUG, "Order delivered: " + newOrder.stringID());
         this.getChannel().basicPublish("", orderManagerQueueName_, null, body);
-
-        --amountOrdersToProcess_;
-        if (amountOrdersToProcess_ == 0) {
-            logger_.log(LogLevel.NOTICE, "Closing Employer.");
-            this.getChannel().basicCancel(channelName_);
-            channelClosed_ = true;
-        }
     }
 
     /**

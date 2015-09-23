@@ -1,5 +1,9 @@
 package client;
 
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.Lock;
+import java.lang.Thread;
+import java.lang.Runtime;
 import java.util.Iterator;
 import java.util.UUID;
 import java.util.ArrayList;
@@ -22,11 +26,12 @@ import configParser.ConfigParser;
 import logger.Logger;
 import logger.LogLevel;
 
-public class MainClass {
+public class MainClass extends Thread {
     public MainClass(String[] argv) {
         randomGenerator_ = new Random(System.currentTimeMillis());
         config_ = ConfigParser.getInstance();
         logger_ = Logger.getInstance();
+        lock_ = new ReentrantLock();
         ordersKeys_ = new ArrayList<UUID>();
 
         config_.init(argv[1]);
@@ -38,6 +43,8 @@ public class MainClass {
         Logger logger = Logger.getInstance();
         try {
             MainClass app = new MainClass(argv);
+            Runtime.getRuntime().addShutdownHook(app);
+
             app.initRabbit();
             logger.log(LogLevel.INFO, 
                 "Proceed to create and send orders");
@@ -161,6 +168,16 @@ public class MainClass {
         return new Order(Product.randomProduct(), amount);
     }
 
+    public void run() {
+        try {
+            this.terminate();
+        }
+        catch (TimeoutException e) {
+        }
+        catch(IOException e) {
+        }
+    }
+
     private Logger logger_;
     private ConfigParser config_;
     private Random randomGenerator_;
@@ -168,5 +185,6 @@ public class MainClass {
     private Connection connection_;
     private String clientQueue_;
     private String queryQueue_;
+    private Lock lock_;
     private ArrayList<UUID> ordersKeys_;
 }
