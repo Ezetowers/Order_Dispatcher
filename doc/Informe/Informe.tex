@@ -29,33 +29,79 @@
 	\newpage
 
 	\section{Introducción}
-		El objetivo del presente trabajo práctico consiste en diseñar e 
+		El presente trabajo práctico consiste en diseñar e 
         implementar un sistema de recepción de pedidos masivos. Para 
         realizar esta tarea, se deben implementar procesos que
         modelen diferentes partes/tareas del sistema. Para comunicar los 
         procesos, se deben utilizar cola de mensajes distribuidas. \\
         \indent RabbitMQ es un middleware orientado a mensajes el cual 
         permite conectar diferentes procesos a través de colas de mensajes
-        distribuídas. 
+        distribuídas. El objetivo del presente trabajo consiste en:
+        
+        \begin{itemize}
+            \item Focalizar el desarrollo de sistema en la recepción fluída
+            de \textbf{Orders} y \textbf{Queries} realizadas por los clientes
+            \item Comprender el funcionamiento básico de RabbitMQ 
+            \item Paralelizar la mayor cantidad de tareas posible, exprimiendo
+            en el máximo nivel posible el middleware de colas a utilizar
+            \item Crear y diseñar una arquitectura escalable horizontalmente
+            de forma de responder de forma eficaz y eficiente ante nuevos
+            requerimientos
+        \end{itemize}
 
     \newpage
     \section{Arquitectura 4 + 1}
-
-    \newpage
     \subsection{Casos de Uso}
+        En la figura \ref{DiagCU} se exhibe el diagrama de casos de uso del 
+        sistema. Se detalla a continuación cada uno de las entradas del mismo:
+        \begin{itemize}
+            \item \textbf{Enviar Orden:} El cliente envía una orden de compra,
+            la cual contiene un identificador único de la orden más la cantidad
+            que desea obtener un determinado producto. Por el momento el 
+            sistema no acepta más de un producto por orden.
+            \item \textbf{Consultar Orden:} Un cliente consulta en que 
+            estado se encuentra su orden. El sistema puede responderle con 
+            alguno de los siguientes estados: 
+            \begin{itemize}
+                \item \textit{RECEIVED}
+                \item \textit{ACCEPTED}
+                \item \textit{REJECTED}
+                \item \textit{DELIVERED}
+            \end{itemize}
+            \item \textbf{Procesar Orden:} Como se considera a los Empleados
+            externos al sistema, el procesamiento de una orden es válido como
+            caso de uso. Los empleados obtienen los pedidos a procesar 
+            (aquellos que fueron aceptados), y al terminar de trabajar con los
+            mismo proceden a cambiar su estado a \textit{DELIVERED}
+            \item \textbf{Incrementar Stock:} Un proveedor se encarga de 
+            aumentar el stock de los productos ofrecidos por la aplicación
+        \end{itemize}
+
+        \begin{figure}[!htb]                                             
+            \centering                                                   
+            \includegraphics[width=8cm,origin=c]{Imagenes/Casos_De_Uso.pdf}        
+            \caption{Diagrama de Casos de Uso} \label{DiagCU}
+        \end{figure}
 
     \newpage
     \subsection{Vista Lógica}
-
-    \newpage
-    \subsection{Vista de Procesos}
+        \begin{figure}[!htb]                                             
+            \centering                                                   
+            \includegraphics[width=18cm,angle=90,origin=c]{Imagenes/Diagrama_Clases.pdf} 
+            \caption{Diagrama de Clases} \label{DiagClases}
+        \end{figure}
 
     \newpage
     \subsection{Vista de Despliegue}
         Para la vista de despliegue se decidió realizar un diagrama de 
-        robustez para explicar la arquitectura del sistema. El mismo se 
-        puede visualizar en la figura \ref{DiagRobustez}. Debido a que
-        no se encontro una herramienta adecuada para graficar el mismo,
+        robustez y un diagrama de despliegue. El primero explica como los 
+        diferentes procesos del sistema se comunican entre sí a través de 
+        diferentes colas de mensaje, mientras que el segundo intenta representar
+        la arquitectura física de la aplicación.
+        
+        \subsubsection{Diagrama de Robustez}
+        El mismo se puede visualizar en la figura \ref{DiagRobustez}. Debido 
+        a que no se encontro una herramienta adecuada para graficar el mismo,
         se detalla a continuación los elementos utilizados junto con el
         significado de cada uno:
 
@@ -73,16 +119,56 @@
             \item \textbf{Círculos Amarillos:} Controladores. Por cuestiones
             de modelo de negocio, solo puede haber uno de estos controladores
             de cada tipo al mismo tiempo
-            \item \textbf{Colas:} RabbitMQ Queues. Las flechas entrantes 
+            \item \textbf{Colas:} RabbitMQ Queues. Las flechas entrantes        
             indican que un controlador ingresa mensajes en la cola. Flechas
             salientes indican que un controlador saca elementos de la cola.
             \item \textbf{Discos:} Archivos físicos los cuales, en el presente
             trabajo, simulan el funcionamiento de bases de datos relacionales.
         \end{itemize}
 
+        \subsubsection{Diagrama de Despliegue}
+        El diagrama se despliegue se exhibe en la figura \ref{DiagDespl}. Cada 
+        nodo representa a un servidor físico independiente, el cual corre 
+        aplicaciones y puede o no tener Base de Datos. Se procede a detallar
+        cada uno de los nodos:
+
+        \begin{itemize}
+            \item \textbf{DispathServer:} En este nodo corren los procesos
+            RequestDispatcher que se encargar de recibir las \textbf{Orders}
+            de los clientes para derivarlas a otros nodos. En el diagrama
+            se puede ver que existen dos nodos de este tipo. Con esto se 
+            quiere representar que se puede escalar este nodo agregando
+            N de los mismos de forma transparante al sistema.
+            \item \textbf{AuditLogServer:} Nodo donde se encuentra el log 
+            de auditoría. Como los logs deben ser almacenados en orden, 
+            solo puede haber un proceso corriendo de este tipo. El proceso
+            debe correr en un servidor aparte debido a que este es un punto
+            sensible del sistema y debe ser optimizado en la mayor medida
+            posible.
+            \item \textbf{StockServer:} En el presente nodo se encuentra 
+            la base de datos en donde se almacena el Stock de los productos.
+            En el nodo se pueden ver más de una aplicación, lo cual indica
+            que se pueden correr N instancias de este proceso en el dispositivo
+            físico, pero que no se puede agregar más nodos de este tipo. Esto
+            último se debe a que los procesos a través de I/O syscalls a la 
+            DB las cuales deben correrse en el mismo servidor físico donde
+            se encuentra la DB en cuestión.
+            \item \textbf{OrderServer:} En el presente nodo se encuentran los
+            procesos OrderManager y QuerySolver. Se cumplen los mismos 
+            requisitos que para el proceso StockManager, dado que estos 
+            procesos también realizando un acceso físico a un DB (OrderDB).
+           
+        \end{itemize}
+
+
+        \begin{figure}[!htb]                                             
+            \centering                                                   
+            \includegraphics[width=15cm,origin=c]{Imagenes/Despliegue.pdf}        
+            \caption{Diagrama de Despliegue} \label{DiagRobustez}
+        \end{figure}
    
     %\newpage 
     %\section{Código}
-    %    \includepdf[pages=-,scale=.8,pagecommand={},landscape=true]{codigo.pdf}
+    %    \includepdf[pages=-,scale=.80,pagecommand={},landscape=true]{codigo.pdf}
 \end{document}
 
