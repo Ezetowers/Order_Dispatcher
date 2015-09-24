@@ -1,0 +1,88 @@
+\documentclass[a4paper,10pt]{article}
+%\usepackage[latin1]{inputenc} % Paquetes de idioma (otro encoding)
+\usepackage[utf8]{inputenc} % Paquetes de idioma
+\usepackage[spanish]{babel} % Paquetes de idioma
+\usepackage{graphicx} % Paquete para ingresar gráficos
+\usepackage{grffile}
+\usepackage{hyperref}
+\usepackage{fancybox}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{listings}
+\usepackage{pdfpages}
+% Paquetes de macros de Circuitos
+%\usepackage{pstricks}
+\usepackage{tikz}
+
+% Encabezado y Pié de página
+\input{EncabezadoyPie.tex}
+% Carátula del Trabajo
+\title{ \input{Portada.tex} }
+
+\begin{document}
+	\maketitle % Hace que el título anterior sea el principal del documento
+	\newpage
+
+    % Esta línea genera un indice a partir de las secciones y 
+    % subsecciones creadas en el documento
+	\tableofcontents 
+	\newpage
+
+	\section{Introducción}
+		El objetivo del presente trabajo práctico consiste en diseñar e 
+        implementar un sistema de recepción de pedidos masivos. Para 
+        realizar esta tarea, se deben implementar procesos que
+        modelen diferentes partes/tareas del sistema. Para comunicar los 
+        procesos, se deben utilizar cola de mensajes distribuidas. \\
+        \indent RabbitMQ es un middleware orientado a mensajes el cual 
+        permite conectar diferentes procesos a través de colas de mensajes
+        distribuídas. 
+
+    \newpage
+    \section{Arquitectura 4 + 1}
+
+    \newpage
+    \subsection{Casos de Uso}
+
+    \newpage
+    \subsection{Vista Lógica}
+
+    \newpage
+    \subsection{Vista de Procesos}
+
+    \newpage
+    \subsection{Vista de Despliegue}
+        Para la vista de despliegue se decidió realizar un diagrama de 
+        robustez para explicar la arquitectura del sistema. El mismo se 
+        puede visualizar en la figura \ref{DiagRobustez}. Debido a que
+        no se encontro una herramienta adecuada para graficar el mismo,
+        se detalla a continuación los elementos utilizados junto con el
+        significado de cada uno:
+
+        \begin{figure}[!htb]                                             
+            \centering                                                   
+            \includegraphics[width=20cm,angle=90,origin=c]{Imagenes/robustez.pdf}        
+            \caption{Diagrama de Robustez} \label{DiagRobustez}
+        \end{figure}
+
+        \begin{itemize}
+            \item \textbf{Círculos Rojos:} Procesos que envían estímulos al 
+            sistema
+            \item \textbf{Círculos Verdes:} Controladores. Puede haber N 
+            de ellos          
+            \item \textbf{Círculos Amarillos:} Controladores. Por cuestiones
+            de modelo de negocio, solo puede haber uno de estos controladores
+            de cada tipo al mismo tiempo
+            \item \textbf{Colas:} RabbitMQ Queues. Las flechas entrantes 
+            indican que un controlador ingresa mensajes en la cola. Flechas
+            salientes indican que un controlador saca elementos de la cola.
+            \item \textbf{Discos:} Archivos físicos los cuales, en el presente
+            trabajo, simulan el funcionamiento de bases de datos relacionales.
+        \end{itemize}
+
+   
+    %\newpage 
+    %\section{Código}
+    %    \includepdf[pages=-,scale=.8,pagecommand={},landscape=true]{codigo.pdf}
+\end{document}
+
