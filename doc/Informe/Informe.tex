@@ -77,15 +77,68 @@
             aumentar el stock de los productos ofrecidos por la aplicación
         \end{itemize}
 
-        \begin{figure}[!htb]                                             
+        \newpage
+        \begin{figure}[!Hhtb]                                             
             \centering                                                   
-            \includegraphics[width=8cm,origin=c]{Imagenes/Casos_De_Uso.pdf}        
+            \includegraphics[width=15cm,origin=c]{Imagenes/Casos_De_Uso.pdf}        
             \caption{Diagrama de Casos de Uso} \label{DiagCU}
         \end{figure}
 
     \newpage
     \subsection{Vista Lógica}
-        \begin{figure}[!htb]                                             
+        En la figura \ref{DiagClases} se exhibe el diagrama de clases, el cual
+        muestra la vista lógica del sistema. A continuación se adjunta una 
+        breve explicación de cada una de las clases:
+
+        \begin{itemize}
+            \item \textbf{DefaultConsumer:} Clase abstracta proveída por 
+            RabbitMQ para consumir los mensajes recibidos en las colas. Cada 
+            proceso que recibe mensajes desde una cola crea un objeto que 
+            hereda de esta clase. Las clases que poseen como Base a esta clase
+            son las siguientes:
+            \begin{itemize}
+                \item \textit{RequestDispatcher}
+                \item \textit{StockManager}
+                \item \textit{QuerySolver}
+                \item \textit{AuditLogger}
+                \item \textit{OrderManager}
+            \end{itemize}
+            \item \textbf{StockDB:} Esta clase encapsula la persistencia del 
+            Stock de los Productos del sistema. La misma almacena cada 
+            producto en un archivo binario como registros de tamaño fijo. 
+            \item \textbf{Order:} Entidad que modela a los Pedidos efectuados
+            por los clientes del sistema. La misma está compuesta por los 
+            siguientes atributos:
+                \begin{itemize}
+                    \item \textit{Key:} UUID que representa unequívocamente a 
+                    cada \textit{Order}. 
+                    \item \textit{Product:} Tipo de producto que el cliente
+                    desea obtener.
+                    \item \textit{Amount:} Cantidad de productos del mismo
+                    tipo que se desea obtener.
+                    \item{OrderState:} Estado de la orden. El mismo es 
+                    modificado por cada proceso del sistema durante todo el 
+                    ciclo de vida del objeto en el sistema.
+                \end{itemize}
+            \item \textbf{OrderDB:} Clase que expone una API(add, alter) para 
+            efectuar ABMs sobre las \textit{Orders} que lleguen al sistema. La
+            misma almacena las órdenes en diferentes archivos, agrupando las 
+            mismas en función de los 8 bits más significativos del ID de los
+            \textit{Pedidos}. Al igual que \textit{StockDB}, esta clase 
+            almacena cada \textit{Pedido} como un registro de tamaño fijo.
+            \item \textbf{OrderDBEntry:} Entidad que posee la responsabilidad
+            de serializar/deserializar \textit{Orders}.
+            \item \textbf{OrderState:} Enum con los diferentes estados que 
+            posee un producto
+            \item \textbf{Product:} Enum que identifica a cada producto en
+            función del nombre que posee el mismo. Además de esto, posee en
+            su firma un factory method que permite crear un producto al azar
+            entre todos los posibles.
+    
+        \end{itemize}
+ 
+        \newpage
+        \begin{figure}[!Hhtb]                                             
             \centering                                                   
             \includegraphics[width=18cm,angle=90,origin=c]{Imagenes/Diagrama_Clases.pdf} 
             \caption{Diagrama de Clases} \label{DiagClases}
@@ -164,11 +217,7 @@
         \begin{figure}[!htb]                                             
             \centering                                                   
             \includegraphics[width=15cm,origin=c]{Imagenes/Despliegue.pdf}        
-            \caption{Diagrama de Despliegue} \label{DiagRobustez}
+            \caption{Diagrama de Despliegue} \label{DiagDespl}
         \end{figure}
-   
-    %\newpage 
-    %\section{Código}
-    %    \includepdf[pages=-,scale=.80,pagecommand={},landscape=true]{codigo.pdf}
 \end{document}
 
