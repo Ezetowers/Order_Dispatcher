@@ -33,7 +33,6 @@ public class MainClass extends Thread {
 
         try {
             MainClass app = new MainClass();
-            Runtime.getRuntime().addShutdownHook(app);
 
             config.init(argv[1]);
             app.initLogger(config, argv[0]);
@@ -77,10 +76,6 @@ public class MainClass extends Thread {
         logger.init(logFileName, LogLevel.parse(logLevel));
         logger.setPrefix("[EMPLOYER " + processNumber + "]");
         logger.log(LogLevel.DEBUG, "Process started");
-    }
-
-    public void run() {
-        logger_.log(LogLevel.NOTICE, "Program finished by signal.");
     }
 
     private Logger logger_;

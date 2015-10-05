@@ -43,7 +43,6 @@ public class MainClass extends Thread {
         Logger logger = Logger.getInstance();
         try {
             MainClass app = new MainClass(argv);
-            Runtime.getRuntime().addShutdownHook(app);
 
             app.initRabbit();
             logger.log(LogLevel.INFO, 
@@ -166,16 +165,6 @@ public class MainClass extends Thread {
     private Order generateRandomOrder() {
         long amount = Math.abs(randomGenerator_.nextInt() % 10) + 1;
         return new Order(Product.randomProduct(), amount);
-    }
-
-    public void run() {
-        try {
-            this.terminate();
-        }
-        catch (TimeoutException e) {
-        }
-        catch(IOException e) {
-        }
     }
 
     private Logger logger_;
