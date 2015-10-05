@@ -1,4 +1,4 @@
-package employer;
+package employee;
 
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.Connection;
@@ -18,8 +18,8 @@ import logger.LogLevel;
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
-public class Employer extends DefaultConsumer {
-    public Employer(Channel channel, 
+public class Employee extends DefaultConsumer {
+    public Employee(Channel channel, 
                     String channelName) throws IllegalArgumentException,
                                                IOException {    
         super(channel);

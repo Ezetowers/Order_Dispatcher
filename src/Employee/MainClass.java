@@ -1,4 +1,4 @@
-package employer;
+package employee;
 
 // Program includes
 import java.lang.Thread;
@@ -51,7 +51,7 @@ public class MainClass extends Thread {
                                  false, 
                                  null);
 
-            Consumer consumer = new Employer(channel, deliveryQueue);
+            Consumer consumer = new Employee(channel, deliveryQueue);
             channel.basicConsume(deliveryQueue, true, consumer);
         }
         catch (IllegalArgumentException e) {

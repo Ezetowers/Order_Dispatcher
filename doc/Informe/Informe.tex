@@ -10,6 +10,7 @@
 \usepackage{amsfonts}
 \usepackage{listings}
 \usepackage{pdfpages}
+\usepackage{float}
 % Paquetes de macros de Circuitos
 %\usepackage{pstricks}
 \usepackage{tikz}
@@ -153,32 +154,30 @@
         la arquitectura física de la aplicación.
         
         \subsubsection{Diagrama de Robustez}
-        El mismo se puede visualizar en la figura \ref{DiagRobustez}. Debido 
-        a que no se encontro una herramienta adecuada para graficar el mismo,
-        se detalla a continuación los elementos utilizados junto con el
-        significado de cada uno:
+        El mismo se puede visualizar en la figura \ref{DiagRobustez}. El 
+        presente diagrama posee símbolos extra para explicar de mejor manera
+        la interacción entre los procesos del sistema y las colas de Rabbit.
+        Se decidió además utilizar cilindros en vez de \textit{Entity Objects}
+        para visualizar aquellas entidades que persisten información. \\
+        \indent Las flechas entrantes a las colas de Rabbit simbolizan que 
+        la \textit{Entidad} o \textit{Controlador} están colocando un mensaje
+        en la cola. Las flechas salientes a las colas de Rabbit simbolizan que
+        la \textit{Entidad} o \textit{Controlador} están sacando mensajes de
+        la cola. En el caso de las DBs no se cumple esta regla. Las flechas
+        solo implican que el \textit{Controlador} en cuestión se encuentra
+        realizando operaciones en la misma.
+        \indent En el gráfico se puede observar que las entradas del presente
+        sistema están representadas por los actores presentes en el Diagrama
+        de Casos de Uso exhibido en la figura \ref{DiagCU}.  
+        
 
-        \begin{figure}[!htb]                                             
+        \begin{figure}[H]                                             
             \centering                                                   
             \includegraphics[width=20cm,angle=90,origin=c]{Imagenes/robustez.pdf}        
             \caption{Diagrama de Robustez} \label{DiagRobustez}
         \end{figure}
 
-        \begin{itemize}
-            \item \textbf{Círculos Rojos:} Procesos que envían estímulos al 
-            sistema
-            \item \textbf{Círculos Verdes:} Controladores. Puede haber N 
-            de ellos          
-            \item \textbf{Círculos Amarillos:} Controladores. Por cuestiones
-            de modelo de negocio, solo puede haber uno de estos controladores
-            de cada tipo al mismo tiempo
-            \item \textbf{Colas:} RabbitMQ Queues. Las flechas entrantes        
-            indican que un controlador ingresa mensajes en la cola. Flechas
-            salientes indican que un controlador saca elementos de la cola.
-            \item \textbf{Discos:} Archivos físicos los cuales, en el presente
-            trabajo, simulan el funcionamiento de bases de datos relacionales.
-        \end{itemize}
-
+        \newpage
         \subsubsection{Diagrama de Despliegue}
         El diagrama se despliegue se exhibe en la figura \ref{DiagDespl}. Cada 
         nodo representa a un servidor físico independiente, el cual corre 

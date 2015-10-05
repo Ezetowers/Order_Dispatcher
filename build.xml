@@ -11,10 +11,10 @@
               value=  "Client"/>
     <property name=   "client-class"      
                value= "client.MainClass"/>
-    <property name=   "employer-process-name" 
-              value=  "Employer"/>
-    <property name=   "employer-class"      
-               value= "employer.MainClass"/>
+    <property name=   "employee-process-name" 
+              value=  "Employee"/>
+    <property name=   "employee-class"      
+               value= "employee.MainClass"/>
     <property name=   "request-dispatcher-process-name" 
               value=  "RequestDispatcher"/>
     <property name=   "request-dispatcher-class" 

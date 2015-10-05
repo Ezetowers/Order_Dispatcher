@@ -74,14 +74,12 @@ public class StockDB {
     throws IOException {
         byte[] buffer = new byte[PRODUCT_KEY_MAX_SIZE];
         file_.seek(0);
+        boolean productFound = false;
+        int readBytes = 0;
 
         try {
-            while(true) {
-                int readBytes = file_.read(buffer, 0, PRODUCT_KEY_MAX_SIZE);
-                if (readBytes == -1) {
-                    // lock.release();
-                    return false;
-                }
+            while((readBytes = 
+                   file_.read(buffer, 0, PRODUCT_KEY_MAX_SIZE)) != -1) {
 
                 Product key = Product.valueOf(new String(buffer).trim());
                 if (key != product) {
@@ -90,9 +88,15 @@ public class StockDB {
                     continue;
                 }
 
+                // Just lock the part of the file to be modified
+                FileLock lock = file_.getChannel().lock(file_.getFilePointer(),
+                                                        Long.BYTES,
+                                                        false);
+
                 // Product found, proceed to update value
                 // Read the amount of the stock to update it, and go back to 
                 // the same position
+
                 file_.read(buffer, 0, Long.BYTES);
                 file_.seek(file_.getFilePointer() - Long.BYTES);
 
@@ -112,17 +116,13 @@ public class StockDB {
                 ByteBuffer longBuf = ByteBuffer.allocate(Long.BYTES);
                 longBuf.putLong(newStock);
 
-                // Just lock the part of the file to me modified
-                FileLock lock = file_.getChannel().lock(file_.getFilePointer(),
-                                                        Long.BYTES,
-                                                        false);
                 file_.write(longBuf.array());
                 lock.release();
 
                 logger_.log(LogLevel.DEBUG, "Decreasing stock of product " 
                     + product.toString() + ". PreviousStock: " 
                     + productStock + " - UpdatedStock: " + newStock);
-                break;
+                return true;
             }
         }
         catch (EOFException e) {
@@ -133,8 +133,8 @@ public class StockDB {
             System.exit(-1);
         }
 
-        // lock.release();
-        return true;
+        // Product not found
+        return false;
     }
 
 
