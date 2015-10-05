@@ -16,6 +16,7 @@ import java.util.HashMap;
 import common.Product;
 import logger.Logger;
 import logger.LogLevel;
+import stockManager.UnknownProductException;
 
 public class StockDB {
     public StockDB(String dbFilePath) throws IOException {
@@ -71,10 +72,9 @@ public class StockDB {
     // This method is very long, but don't split it in functions because
     // to performance problems
     public boolean decreaseStock(Product product, Long amount) 
-    throws IOException {
+    throws IOException, UnknownProductException {
         byte[] buffer = new byte[PRODUCT_KEY_MAX_SIZE];
         file_.seek(0);
-        boolean productFound = false;
         int readBytes = 0;
 
         try {
@@ -127,31 +127,27 @@ public class StockDB {
         }
         catch (EOFException e) {
             // If this happen, then the product does not exists and we have
-            // a bug in the system. ABORT!
+            // a bug in the system.
             logger_.log(LogLevel.ERROR, "Product does not exists. Product: " 
                 + product.toString());
-            System.exit(-1);
         }
 
         // Product not found
-        return false;
+        throw new UnknownProductException();
     }
 
 
     // This method is very long, but don't split it in functions because
     // to performance problems
     public boolean increaseStock(Product product, Long amount) 
-    throws IOException {
+    throws IOException, UnknownProductException {
         byte[] buffer = new byte[PRODUCT_KEY_MAX_SIZE];
         file_.seek(0);
+        int readBytes = 0;
 
         try {
-            while(true) {
-                int readBytes = file_.read(buffer, 0, PRODUCT_KEY_MAX_SIZE);
-                if (readBytes == -1) {
-                    // lock.release();
-                    return false;
-                }
+            while((readBytes = 
+                   file_.read(buffer, 0, PRODUCT_KEY_MAX_SIZE)) != -1) {
 
                 Product key = Product.valueOf(new String(buffer).trim());
                 if (key != product) {
@@ -185,19 +181,18 @@ public class StockDB {
                 logger_.log(LogLevel.NOTICE, "Increasing stock of product " 
                     + product.toString() + ". PreviousStock: " 
                     + productStock + " - UpdatedStock: " + newStock);
-                break;
+                return true;
             }
         }
         catch (EOFException e) {
             // If this happen, then the product does not exists and we have
-            // a bug in the system. ABORT!
+            // a bug in the system.
             logger_.log(LogLevel.ERROR, "Product does not exists. Product: " 
                 + product.toString());
-            System.exit(-1);
         }
 
-        // lock.release();
-        return true;
+        // Product not found
+        throw new UnknownProductException();
     }
 
     private Logger logger_;

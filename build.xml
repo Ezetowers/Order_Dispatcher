@@ -79,10 +79,10 @@
             </manifest>
         </jar>
 
-        <jar destfile="${jar.dir}/${employer-process-name}.jar" 
+        <jar destfile="${jar.dir}/${employee-process-name}.jar" 
              basedir="${classes.dir}">
             <manifest>
-                <attribute name="employer-class" value="${employer-class}"/>
+                <attribute name="employee-class" value="${employee-class}"/>
             </manifest>
         </jar>
 
@@ -143,10 +143,10 @@
             </manifest>
         </jar>
 
-        <jar destfile="${jar.dir}/${employer-process-name}.jar" 
+        <jar destfile="${jar.dir}/${employee-process-name}.jar" 
              basedir="${classes.dir}">
             <manifest>
-                <attribute name="employer-class" value="${employer-class}"/>
+                <attribute name="employee-class" value="${employee-class}"/>
             </manifest>
         </jar>
 

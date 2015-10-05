@@ -15,6 +15,7 @@ import common.OrderState;
 import logger.Logger;
 import logger.LogLevel;
 import stockManager.StockDB;
+import stockManager.UnknownProductException;
 
 import java.io.IOException;
 
@@ -41,8 +42,18 @@ public class StockManager extends DefaultConsumer {
 
 
         elapsedTime_ = System.currentTimeMillis();
-        boolean enoughStock = stockDB_.decreaseStock(newOrder.productType(), 
-                                                     newOrder.amount());
+        boolean enoughStock = false;
+        try {
+            enoughStock = stockDB_.decreaseStock(newOrder.productType(), 
+                                                 newOrder.amount());
+        }
+        catch (UnknownProductException e) {
+            // Product doesn't exists. Treat this case as a not enough stock
+            // (Reject the order)
+            enoughStock = false;
+            return;
+        }
+
         elapsedTime_ = System.currentTimeMillis() - elapsedTime_;
         logger_.log(LogLevel.NOTICE, "decreaseStock. Time: " 
             + elapsedTime_ + " ms.");

@@ -20,6 +20,7 @@ import common.Product;
 import configParser.ConfigParser;
 import logger.Logger;
 import logger.LogLevel;
+import stockManager.UnknownProductException;
 
 public class MainClass {
     public MainClass(String[] argv) throws IllegalArgumentException, 
@@ -76,12 +77,19 @@ public class MainClass {
                                                         "type-4-increase"));
         long type5Increase = Long.parseLong(config_.get("STOCK-PROVIDER", 
                                                         "type-5-increase"));
-
-        stockDB_.increaseStock(Product.TYPE_1, globalIncrease + type1Increase);
-        stockDB_.increaseStock(Product.TYPE_2, globalIncrease + type2Increase);
-        stockDB_.increaseStock(Product.TYPE_3, globalIncrease + type3Increase);
-        stockDB_.increaseStock(Product.TYPE_4, globalIncrease + type4Increase);
-        stockDB_.increaseStock(Product.TYPE_5, globalIncrease + type5Increase);
+        try {
+            stockDB_.increaseStock(Product.TYPE_1, 
+                                   globalIncrease + type1Increase);
+            stockDB_.increaseStock(Product.TYPE_2, 
+                                   globalIncrease + type2Increase);
+            stockDB_.increaseStock(Product.TYPE_3, 
+                                   globalIncrease + type3Increase);
+            stockDB_.increaseStock(Product.TYPE_4, 
+                                   globalIncrease + type4Increase);
+            stockDB_.increaseStock(Product.TYPE_5, 
+                                   globalIncrease + type5Increase);
+        }
+        catch (UnknownProductException e) {}
     }
 
     private Logger logger_;
